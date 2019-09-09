@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 
-PACKAGENAME = "bnlhack19"
+PACKAGENAME = "chopperhack19"
 VERSION = "0.0.dev"
 
 
@@ -15,5 +15,5 @@ setup(
     long_description="Source code for the exachoppers at BNL GPU Hackathon 2019",
     install_requires=["numpy", "numba", "scipy"],
     packages=find_packages(),
-    url="https://github.com/ArgonneCPAC/thechopper"
+    url="https://github.com/ArgonneCPAC/chopperhack19"
 )
