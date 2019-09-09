@@ -13,6 +13,9 @@ from math import sqrt as math_sqrt
 from numba import autojit
 
 
+__all__ = ('numpy_gw_hist', 'numba_gw_hist')
+
+
 def numpy_gw_hist(data, bins, scale):
     """Calculate a Gaussian-weighted histogram.
 

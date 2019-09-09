@@ -4,6 +4,9 @@ how halo mass and Vmax smoothly evolve across time.
 import numpy as np
 
 
+__all__ = ('halo_mass_vs_redshift', 'vmax_vs_mhalo_and_redshift')
+
+
 def halo_mass_vs_redshift(halo_mass_at_z0, redshift):
     """Fitting function from Behroozi+13, https://arxiv.org/abs/1207.6105,
     Equations (H2)-(H6). Calibration assumes h=0.7.

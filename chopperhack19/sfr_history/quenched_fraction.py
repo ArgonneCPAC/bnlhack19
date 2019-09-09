@@ -4,6 +4,9 @@ import numpy as np
 from scipy.special import erf
 
 
+__all__ = ('quenched_fraction', )
+
+
 def quenched_fraction(vmax, z, **kwargs):
     """
     Parameters

@@ -4,8 +4,12 @@ SFR and Vmax for main-sequence galaxies
 import numpy as np
 
 
+__all__ = ('mean_sfr', )
+
+
 def mean_sfr(vmax, z, **kwargs):
-    """
+    """Average star formation rate for main-sequence galaxies
+
     Parameters
     ----------
     vmax : ndarray
