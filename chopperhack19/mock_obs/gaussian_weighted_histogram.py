@@ -10,7 +10,7 @@ import numpy as np
 from scipy.stats import norm
 from math import erf as math_erf
 from math import sqrt as math_sqrt
-from numba import autojit
+from numba import jit
 
 
 __all__ = ('numpy_gw_hist', 'numba_gw_hist')
@@ -57,7 +57,7 @@ def numpy_gw_hist(data, bins, scale):
     return total_num_bin_members
 
 
-@autojit
+@jit
 def numba_gw_hist(data, bins, scale, khist):
     """
     Parameters
