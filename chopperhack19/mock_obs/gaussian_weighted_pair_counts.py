@@ -26,12 +26,12 @@ def count_weighted_pairs_3d(x1, y1, z1, w1, x2, y2, z2, w2, rbins, result):
             dx = px-qx
             dy = py-qy
             dz = pz-qz
-            wsum = pw+qw
+            wprod = pw*qw
             dsq = dx*dx + dy*dy + dz*dz
 
             k = nbins-1
             while dsq <= rbins_squared[k]:
-                result[k] += wsum
+                result[k] += wprod
                 k=k-1
                 if k<0:
                     break
