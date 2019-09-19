@@ -11,7 +11,7 @@ from scipy.stats import norm
 from math import erf as math_erf
 from math import sqrt as math_sqrt
 from numba import jit
-
+from numba import cuda
 
 __all__ = ('numpy_gw_hist', 'numba_gw_hist')
 
@@ -87,4 +87,40 @@ def numba_gw_hist(data, bins, scale, khist):
             new_cdf = 0.5*(1.+math_erf(z))
             weight = last_cdf - new_cdf
             khist[j-1] += weight
+            last_cdf = new_cdf
+
+@cuda.jit
+def cuda_gw_hist(data, bins, scale, gw_hist_out):
+    """Increment weighted bin counts in gw_hist_out, given an array of bins
+    Parameters
+    ----------
+    data: ndarray of shape (ndata, )
+
+    bins: ndarray of shape (nbins, )
+    
+    scale: ndarray of shape (ndata, )
+
+    gw_hist_out: ndarray of shape (nbins -1, )
+         empty array to store result
+    """
+    # find where this job goes over
+    start = cuda.grid(1)
+    stride = cuda.gridsize(1)
+
+    # define some useful things
+    bot = bins[0]
+    sqrt2 = math_sqrt(2.)
+
+    # loop over the data set - each thread now looks at one data point.
+    for i in range(start, data.shape[0], stride):
+        z = (data[i] - bot)/scale[i]/sqrt2
+        last_cdf = 0.5*(1.+math_erf(z))
+        # for each bin, calculate weight and add it in
+        for j in range(1, bins.shape[0]):
+            bin_edge = bins[j]
+            z = (data[i] - bin_edge)/scale[i]/sqrt2
+            new_cdf = 0.5*(1.+math_erf(z))
+            weight = last_cdf - new_cdf
+            # atomic add to bin to avoid race conditions
+            cuda.atomic.add(gw_hist_out, j-1, weight)
             last_cdf = new_cdf
