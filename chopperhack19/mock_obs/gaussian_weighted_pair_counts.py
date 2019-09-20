@@ -36,7 +36,7 @@ def count_weighted_pairs_3d(x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, resul
 
             k = nbins-1
             while dsq <= rbins_squared[k]:
-                cuda.atomic.add(result, j-1, wprod)
+                cuda.atomic.add(result, k-1, wprod)
                 k=k-1
-                if k<0:
+                if k<=0:
                     break
