@@ -1,19 +1,24 @@
 """
 """
-from numba import jit
+from numba import cuda
 
 
-@jit
-def count_weighted_pairs_3d(x1, y1, z1, w1, x2, y2, z2, w2, rbins, result):
+__all__ = ('count_weighted_pairs_3d', )
+
+
+@cuda.jit
+def count_weighted_pairs_3d(x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
     """Naively count Npairs(<r), the total number of pairs that are separated
-    by a distance less than r, for each r in the input rbins.
+    by a distance less than r, for each r**2 in the input rbins_squared.
     """
-    n1 = x1.size
-    n2 = x2.size
-    nbins = rbins.size
-    rbins_squared = rbins*rbins
+    start = cuda.grid(1)
+    stride = cuda.gridsize(1)
 
-    for i in range(n1):
+    n1 = x1.shape[0]
+    n2 = x2.shape[0]
+    nbins = rbins_squared.shape[0]
+
+    for i in range(start, n1, stride):
         px = x1[i]
         py = y1[i]
         pz = z1[i]
@@ -31,9 +36,7 @@ def count_weighted_pairs_3d(x1, y1, z1, w1, x2, y2, z2, w2, rbins, result):
 
             k = nbins-1
             while dsq <= rbins_squared[k]:
-                result[k] += wprod
+                cuda.atomic.add(result, j-1, wprod)
                 k=k-1
                 if k<0:
                     break
-
-    return result

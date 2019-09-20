@@ -13,7 +13,7 @@ from math import sqrt as math_sqrt
 from numba import jit
 from numba import cuda
 
-__all__ = ('numpy_gw_hist', 'numba_gw_hist')
+__all__ = ('numpy_gw_hist', 'numba_gw_hist', 'cuda_gw_hist')
 
 
 def numpy_gw_hist(data, bins, scale):
@@ -97,7 +97,7 @@ def cuda_gw_hist(data, bins, scale, gw_hist_out):
     data: ndarray of shape (ndata, )
 
     bins: ndarray of shape (nbins, )
-    
+
     scale: ndarray of shape (ndata, )
 
     gw_hist_out: ndarray of shape (nbins -1, )
