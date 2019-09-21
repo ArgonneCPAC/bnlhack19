@@ -1,6 +1,10 @@
 # chopperhack19
 Source code for the BNL GPU Hackathon
 
+## Data for Testing
+
+- https://portal.nersc.gov/project/hacc/aphearin/BNLHack19/
+- https://drive.google.com/file/d/1JZn3fbBELazpnrlw-0WiGzBkNZaFlT_7/view?usp=sharing
 
 ## Code organization notes
 
