@@ -16,7 +16,9 @@ Source code for the BNL GPU Hackathon
 1. Install miniconda. 
     
    I've been told it is better to keep it out of your home area, but that might just be my account. I made a directory on the 
-   global scratch area, symlinked it to my home area, and then installed there.
+   global scratch area, symlinked it to my home area, and then installed there. 
+   
+   The global scratch area is `/hpcgpfs01/scratch`.
 
 2. Use `conda init` to setup your shell if you did not install it while doing miniconda.
 
