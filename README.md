@@ -26,4 +26,4 @@ Source code for the BNL GPU Hackathon
 
 4. Install all of the software you need in your base conda env (e.g., `numba`, `pytest`, `numpy`, `scipy`, `jax`, etc.).
 
-5. Get a node `srun --pty -A hackathon -p long -t 30:00 /bin/bash`
+5. Get a node `srun --pty -A hackathon -p long -t 3:00:00 /bin/bash`
