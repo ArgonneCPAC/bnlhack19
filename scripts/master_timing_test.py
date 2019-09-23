@@ -67,7 +67,6 @@ def _main(func_str, blocks, threads):
         assert np.all(np.isfinite(results_host))
         runtime = end-start
     else:
-        config.THREADING_LAYER = 'omp'
         print('numba threads:', threading_layer())
 
         d_x1 = x1

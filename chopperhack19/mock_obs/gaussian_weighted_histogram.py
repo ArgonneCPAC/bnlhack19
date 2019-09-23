@@ -10,8 +10,12 @@ import numpy as np
 from scipy.stats import norm
 from math import erf as math_erf
 from math import sqrt as math_sqrt
-from numba import jit
+from numba import njit
 from numba import cuda
+
+from numba import config
+config.THREADING_LAYER = 'omp'
+
 
 __all__ = ('numpy_gw_hist', 'numba_gw_hist', 'cuda_gw_hist')
 
@@ -57,7 +61,7 @@ def numpy_gw_hist(data, bins, scale):
     return total_num_bin_members
 
 
-@jit
+@njit
 def numba_gw_hist(data, bins, scale, khist):
     """
     Parameters
@@ -88,6 +92,7 @@ def numba_gw_hist(data, bins, scale, khist):
             weight = last_cdf - new_cdf
             khist[j-1] += weight
             last_cdf = new_cdf
+
 
 @cuda.jit
 def cuda_gw_hist(data, bins, scale, gw_hist_out):
