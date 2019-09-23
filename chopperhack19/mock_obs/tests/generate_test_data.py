@@ -7,6 +7,10 @@ __all__ = ('random_weighted_points', )
 
 
 DEFAULT_SEED = 43
+DEFAULT_NBINS = 20
+DEFAULT_RMIN, DEFAULT_RMAX = 0.1, 40
+DEFAULT_RBINS = np.logspace(np.log10(DEFAULT_RMIN), np.log10(DEFAULT_RMAX), DEFAULT_NBINS)
+DEFAULT_RBINS_SQUARED = DEFAULT_RBINS**2
 
 
 def random_weighted_points(n, Lbox, seed=DEFAULT_SEED):
