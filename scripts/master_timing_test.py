@@ -24,7 +24,7 @@ def _main(func, blocks, threads):
     print('func:', func)
 
     Lbox = 1000.
-    result = np.zeros_like(DEFAULT_RBINS_SQUARED)
+    result = np.zeros_like(DEFAULT_RBINS_SQUARED)[:-1]
 
     n1 = 128
     n2 = 128
