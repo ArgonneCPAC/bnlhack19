@@ -15,10 +15,6 @@ from time import time
 @click.option('--blocks', default=32)
 @click.option('--threads', default=128)
 def _main(func_str, blocks, threads):
-    if len(sys.argv) == 2:
-        func_str = sys.argv[1]
-    else:
-        func_str = 'count_weighted_pairs_3d_cpu'
 
     func = getattr(chopperhack19.mock_obs, func_str)
     if func is None:
