@@ -4,11 +4,13 @@ import numpy as np
 from numpy import testing
 from numba import cuda
 
-from ..gaussian_weighted_pair_counts import count_weighted_pairs_3d_cpu, count_weighted_pairs_3d_cuda
+from ..gaussian_weighted_pair_counts import (
+    count_weighted_pairs_3d_cpu, count_weighted_pairs_3d_cuda)
 from generate_test_data import random_weighted_points
 
 
 DEFAULT_SEED = 43
+
 
 def test_gpu_accuracy():
     # generate mocks
@@ -20,7 +22,8 @@ def test_gpu_accuracy():
     # generate bins + result array
     nbins = 20
     rmin, rmax = 0.1, 40
-    rbins = np.logspace(np.log10(rmin), np.log10(rmax), nbins).astype(np.float32)
+    rbins = np.logspace(
+        np.log10(rmin), np.log10(rmax), nbins).astype(np.float32)
     rbins_squared = rbins**2
     result_cpu = np.zeros(nbins-1)
 
@@ -39,15 +42,19 @@ def test_gpu_accuracy():
     d_result_gpu = cuda.to_device(result_cpu)
 
     # run CPU test
-    count_weighted_pairs_3d_cpu(x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result_cpu)
-    
+    count_weighted_pairs_3d_cpu(
+        x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result_cpu)
+
     # run GPU test
-    count_weighted_pairs_3d_cuda(d_x1, d_y1, d_z1, d_w1, d_x2, d_y2, d_z2, d_w2, d_rbins_squared, d_result_gpu)
+    count_weighted_pairs_3d_cuda(
+        d_x1, d_y1, d_z1, d_w1, d_x2, d_y2, d_z2, d_w2,
+        d_rbins_squared, d_result_gpu)
     # write back to host
     result_gpu = d_result_gpu.copy_to_host()
 
     # check if they are the same
     testing.assert_array_equal(result_cpu, result_gpu)
+
 
 def test1():
     n1, n2 = 500, 1000
@@ -63,7 +70,7 @@ def test1():
     rbins = np.logspace(-1, 1.5, 15)
     result = np.zeros_like(rbins)
 
-    count_weighted_pairs_3d(
+    count_weighted_pairs_3d_cpu(
         pos1[:, 0], pos1[:, 1], pos1[:, 2], w1,
         pos2[:, 0], pos2[:, 1], pos2[:, 2], w2,
         rbins, result)
