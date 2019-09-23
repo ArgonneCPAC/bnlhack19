@@ -40,9 +40,9 @@ def calculate_chaining_mesh(x, y, z, subvol_xlength, subvol_ylength, subvol_zlen
     ycell_size = subvol_ylength / ndivs_y
     zcell_size = subvol_zlength / ndivs_z
 
-    ix = x // xcell_size
-    iy = y // ycell_size
-    iz = z // zcell_size
+    ix = np.array(x // xcell_size, dtype='i4')
+    iy = np.array(y // ycell_size, dtype='i4')
+    iz = np.array(z // zcell_size, dtype='i4')
 
     cell_id = np.ravel_multi_index( (ix, iy, iz), (ndivs_x, ndivs_y, ndivs_z) )
     idx_sorted = np.ascontiguousarray(np.argsort(cell_id))
