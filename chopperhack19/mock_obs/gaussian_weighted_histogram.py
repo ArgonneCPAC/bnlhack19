@@ -25,7 +25,8 @@ def numpy_gw_hist(data, bins, scale):
     by evaluating the CDF of the Gaussian associated with each point.
     Sum the results across all bins and return the result.
 
-    Converges to an ordinary histogram in the limit of large data where scale << binsize.
+    Converges to an ordinary histogram in the limit of large data where
+    scale << binsize.
 
     Parameters
     ----------
@@ -45,15 +46,19 @@ def numpy_gw_hist(data, bins, scale):
 
     scale = np.zeros(ndata) + scale
 
-    logsm_bin_matrix = np.repeat(bins, ndata).reshape((nbins, ndata)).astype('f4')
+    logsm_bin_matrix = np.repeat(
+        bins, ndata).reshape((nbins, ndata)).astype('f4')
     data_matrix = np.tile(data, nbins).reshape((nbins, ndata)).astype('f4')
-    smoothing_kernel_matrix = np.tile(scale, nbins).reshape((nbins, ndata)).astype('f4')
+    smoothing_kernel_matrix = np.tile(
+        scale, nbins).reshape((nbins, ndata)).astype('f4')
 
-    cdf_matrix = norm.cdf(logsm_bin_matrix, loc=data_matrix, scale=smoothing_kernel_matrix)
+    cdf_matrix = norm.cdf(
+        logsm_bin_matrix, loc=data_matrix, scale=smoothing_kernel_matrix)
 
-    prob_bin_member = np.diff(cdf_matrix, axis=0)  #  Shape (nbins-1, ndata)
+    prob_bin_member = np.diff(cdf_matrix, axis=0)  # Shape (nbins-1, ndata)
 
-    total_num_bin_members = np.sum(prob_bin_member, axis=1)  #  Shape (nbins-1, )
+    total_num_bin_members = np.sum(
+        prob_bin_member, axis=1)  # Shape (nbins-1, )
 
     return total_num_bin_members
 

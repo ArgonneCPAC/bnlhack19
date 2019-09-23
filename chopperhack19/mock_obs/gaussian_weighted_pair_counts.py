@@ -1,15 +1,19 @@
 """
 """
-from numba import cuda, njit, prange
+import numpy as np
+from numba import cuda, njit
+import joblib
+import multiprocessing
 
 __all__ = (
     'count_weighted_pairs_3d_cuda',
-    'count_weighted_pairs_3d_cpu',
-    'count_weighted_pairs_3d_cpu_serial')
+    'count_weighted_pairs_3d_cpu_mp',
+    'count_weighted_pairs_3d_cpu')
 
 
 @cuda.jit
-def count_weighted_pairs_3d_cuda(x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
+def count_weighted_pairs_3d_cuda(
+        x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
     """Naively count Npairs(<r), the total number of pairs that are separated
     by a distance less than r, for each r**2 in the input rbins_squared.
     """
@@ -39,44 +43,42 @@ def count_weighted_pairs_3d_cuda(x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, 
             k = nbins-1
             while dsq <= rbins_squared[k]:
                 cuda.atomic.add(result, k-1, wprod)
-                k=k-1
-                if k<=0:
+                k = k-1
+                if k <= 0:
                     break
 
 
-@njit(parallel=True)
-def count_weighted_pairs_3d_cpu(x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
+def count_weighted_pairs_3d_cpu_mp(
+        x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
 
     n1 = x1.shape[0]
-    n2 = x2.shape[0]
-    nbins = rbins_squared.shape[0]
+    n_per = n1 // multiprocessing.cpu_count()
+    if n_per < 1:
+        n_per = 1
 
-    for i in range(n1):
-        px = x1[i]
-        py = y1[i]
-        pz = z1[i]
-        pw = w1[i]
-        for j in prange(n2):
-            qx = x2[j]
-            qy = y2[j]
-            qz = z2[j]
-            qw = w2[j]
-            dx = px-qx
-            dy = py-qy
-            dz = pz-qz
-            wprod = pw*qw
-            dsq = dx*dx + dy*dy + dz*dz
+    jobs = []
+    for i in range(multiprocessing.cpu_count()):
+        start = i * n_per
+        end = start + n_per
+        if i == multiprocessing.cpu_count()-1:
+            end = n1
+        jobs.append(joblib.delayed(count_weighted_pairs_3d_cpu)(
+            x1[start:end],
+            y1[start:end],
+            z1[start:end],
+            w1[start:end], x2, y2, z2, w2, rbins_squared, result
+        ))
 
-            k = nbins-1
-            while dsq <= rbins_squared[k]:
-                result[k-1] += wprod
-                k=k-1
-                if k<=0:
-                    break
+    with joblib.Parallel(
+            n_jobs=multiprocessing.cpu_count(), backend='loky') as p:
+        res = p(jobs)
+
+    return np.sum(np.stack(res, axis=1), axis=1)
 
 
 @njit()
-def count_weighted_pairs_3d_cpu_serial(x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
+def count_weighted_pairs_3d_cpu(
+        x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
 
     n1 = x1.shape[0]
     n2 = x2.shape[0]
@@ -101,6 +103,8 @@ def count_weighted_pairs_3d_cpu_serial(x1, y1, z1, w1, x2, y2, z2, w2, rbins_squ
             k = nbins-1
             while dsq <= rbins_squared[k]:
                 result[k-1] += wprod
-                k=k-1
-                if k<=0:
+                k = k-1
+                if k <= 0:
                     break
+
+    return result

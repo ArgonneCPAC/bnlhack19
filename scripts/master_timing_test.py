@@ -1,6 +1,5 @@
 import numpy as np
 import click
-from numba import threading_layer
 
 import chopperhack19.mock_obs
 from chopperhack19.mock_obs.tests import random_weighted_points
@@ -10,13 +9,14 @@ from time import time
 
 
 @click.command()
-@click.option('--func-str', default='count_weighted_pairs_3d_cpu',
+@click.option('--func', default='count_weighted_pairs_3d_cpu_serial',
               help='the function to run')
 @click.option('--blocks', default=32)
 @click.option('--threads', default=128)
-def _main(func_str, blocks, threads):
+def _main(func, blocks, threads):
 
-    func = getattr(chopperhack19.mock_obs, func_str)
+    func_str = func
+    func = getattr(chopperhack19.mock_obs, func)
     if func is None:
         raise ImportError('could not import %s' % func_str)
 
@@ -28,16 +28,8 @@ def _main(func_str, blocks, threads):
 
     n1 = 128
     n2 = 128
-    x1, y1, z1, w1 = random_weighted_points(n1, Lbox, 0)
-    x2, y2, z2, w2 = random_weighted_points(n2, Lbox, 1)
-
-    func(
-        x1, y1, z1, w1, x2, y2, z2, w2, DEFAULT_RBINS_SQUARED, result)
-
-    n1 = 200013
-    n2 = 200015
-    x1, y1, z1, w1 = random_weighted_points(n1, Lbox, 0)
-    x2, y2, z2, w2 = random_weighted_points(n2, Lbox, 1)
+    _x1, _y1, _z1, _w1 = random_weighted_points(n1, Lbox, 0)
+    _x2, _y2, _z2, _w2 = random_weighted_points(n2, Lbox, 1)
 
     if 'cuda' in func_str:
         from numba import cuda
@@ -45,6 +37,20 @@ def _main(func_str, blocks, threads):
         print('blocks:', blocks)
         print('threads:', threads)
 
+        func[blocks, threads](
+            _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
+            DEFAULT_RBINS_SQUARED, result)
+    else:
+        func(
+            _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
+            DEFAULT_RBINS_SQUARED, result)
+
+    n1 = 200013
+    n2 = 200015
+    x1, y1, z1, w1 = random_weighted_points(n1, Lbox, 0)
+    x2, y2, z2, w2 = random_weighted_points(n2, Lbox, 1)
+
+    if 'cuda' in func_str:
         d_x1 = cuda.to_device(x1)
         d_y1 = cuda.to_device(y1)
         d_z1 = cuda.to_device(z1)
@@ -67,11 +73,6 @@ def _main(func_str, blocks, threads):
         assert np.all(np.isfinite(results_host))
         runtime = end-start
     else:
-        try:
-            print('numba threads:', threading_layer())
-        except Exception:
-            pass
-
         d_x1 = x1
         d_y1 = y1
         d_z1 = z1
