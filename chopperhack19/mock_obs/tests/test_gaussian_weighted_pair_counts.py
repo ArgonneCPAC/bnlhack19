@@ -5,7 +5,7 @@ from numpy import testing
 from numba import cuda
 import pytest
 
-from ..gaussian_weighted_pair_counts import (
+from .. import (
     count_weighted_pairs_3d_cpu,
     count_weighted_pairs_3d_cpu_mp,
     count_weighted_pairs_3d_cuda,
