@@ -38,8 +38,8 @@ def _main(func_str, blocks, threads):
     func(
         x1, y1, z1, w1, x2, y2, z2, w2, DEFAULT_RBINS_SQUARED, result)
 
-    n1 = 50013
-    n2 = 50013
+    n1 = 200013
+    n2 = 200015
     x1, y1, z1, w1 = random_weighted_points(n1, Lbox, 0)
     x2, y2, z2, w2 = random_weighted_points(n2, Lbox, 1)
 
