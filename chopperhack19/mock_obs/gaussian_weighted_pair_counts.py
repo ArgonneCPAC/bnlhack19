@@ -1,8 +1,7 @@
 """
 """
-from numba import cuda, njit, prange, config
+from numba import cuda, njit, prange
 
-config.THREADING_LAYER = 'omp'
 __all__ = ('count_weighted_pairs_3d_cuda', 'count_weighted_pairs_3d_cpu')
 
 

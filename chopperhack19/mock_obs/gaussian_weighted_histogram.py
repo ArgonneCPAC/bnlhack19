@@ -13,9 +13,6 @@ from math import sqrt as math_sqrt
 from numba import njit
 from numba import cuda
 
-from numba import config
-config.THREADING_LAYER = 'omp'
-
 
 __all__ = ('numpy_gw_hist', 'numba_gw_hist', 'cuda_gw_hist')
 
