@@ -1,6 +1,6 @@
 import numpy as np
 import click
-from numba import threading_layer
+from numba import threading_layer, config
 
 import chopperhack19.mock_obs
 from chopperhack19.mock_obs.tests import random_weighted_points
@@ -67,6 +67,7 @@ def _main(func_str, blocks, threads):
         assert np.all(np.isfinite(results_host))
         runtime = end-start
     else:
+        config.THREADING_LAYER = 'omp'
         print('numba threads:', threading_layer())
 
         d_x1 = x1
