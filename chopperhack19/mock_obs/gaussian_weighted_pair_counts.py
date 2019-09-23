@@ -60,7 +60,7 @@ def count_weighted_pairs_3d_cpu_corrfunc(
         0, threads, rbins, x1, y1, z1,
         weights1=w1, weight_type='pair_product',
         X2=x2, Y2=y2, Z2=z2, weights2=w2)
-    result[:] = np.cumsum(_result['weightavg']) * np.cumsum(_result['npairs'])
+    result[:] = np.cumsum(_result['weightavg'] * _result['npairs'])
 
 
 def count_weighted_pairs_3d_cpu_mp(
