@@ -8,14 +8,17 @@ import pytest
 from ..gaussian_weighted_pair_counts import (
     count_weighted_pairs_3d_cpu,
     count_weighted_pairs_3d_cpu_mp,
-    count_weighted_pairs_3d_cuda)
+    count_weighted_pairs_3d_cuda,
+    count_weighted_pairs_3d_cpu_corrfunc)
 from .generate_test_data import random_weighted_points
 
 
 DEFAULT_SEED = 43
 
 
-@pytest.mark.parametrize('func', [count_weighted_pairs_3d_cpu_mp])
+@pytest.mark.parametrize('func', [
+        count_weighted_pairs_3d_cpu_mp,
+        count_weighted_pairs_3d_cpu_corrfunc])
 def test_accuracy_cpu(func):
     # generate mocks
     n1 = 1000

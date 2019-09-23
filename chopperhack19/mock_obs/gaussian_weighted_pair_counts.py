@@ -7,7 +7,7 @@ import multiprocessing
 
 __all__ = (
     'count_weighted_pairs_3d_cuda',
-    'count_weighted_pairs_3d_cpu_corrfunc')
+    'count_weighted_pairs_3d_cpu_corrfunc',
     'count_weighted_pairs_3d_cpu_mp',
     'count_weighted_pairs_3d_cpu')
 
@@ -48,16 +48,21 @@ def count_weighted_pairs_3d_cuda(
                 if k <= 0:
                     break
 
-def count_weighted_pairs_3d_cpu_corrfunc(x1, y1, z1, w1, x2, y2, z2, rbins_squared, result):
+
+def count_weighted_pairs_3d_cpu_corrfunc(
+        x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
     # requires Corrfunc
     from Corrfunc.theory.DD import DD
     import multiprocessing
     rbins = np.sqrt(rbins_squared)
     threads = multiprocessing.cpu_count()
-    result = DD(0, threads, rbins, x1, y1, z1, weights1=w1, weight_type='pair_product',
-                X2=x2, Y2=y2, Z2=z2, weights2=w2)
+    _result = DD(
+        0, threads, rbins, x1, y1, z1,
+        weights1=w1, weight_type='pair_product',
+        X2=x2, Y2=y2, Z2=z2, weights2=w2)
     # different format result, not easy to compare
-    return
+    result[:] = _result['weightavg']
+
 
 def count_weighted_pairs_3d_cpu_mp(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
@@ -86,7 +91,6 @@ def count_weighted_pairs_3d_cpu_mp(
         res = p(jobs)
 
     result[:] = np.sum(np.stack(res, axis=1), axis=1)
-    return result
 
 
 @njit()
@@ -119,5 +123,3 @@ def count_weighted_pairs_3d_cpu(
                 k = k-1
                 if k <= 0:
                     break
-
-    return result
