@@ -3,7 +3,7 @@ of the brute-force pair-counter
 """
 from numba import cuda
 import numpy as np
-from bnlchopperhack19 import count_weighted_pairs_3d
+from chopperhack19 import count_weighted_pairs_3d
 from time import time
 
 
