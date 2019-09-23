@@ -69,6 +69,7 @@ def _main(func_str, blocks, threads):
         results_host = d_result.copy_to_host()
         end = time()
         assert np.all(np.isfinite(results_host))
+        runtime = end-start
     else:
         d_x1 = x1
         d_y1 = y1
