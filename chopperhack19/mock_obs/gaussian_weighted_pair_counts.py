@@ -123,3 +123,5 @@ def count_weighted_pairs_3d_cpu(
                 k = k-1
                 if k <= 0:
                     break
+
+    return result
