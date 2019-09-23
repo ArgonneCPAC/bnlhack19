@@ -5,7 +5,8 @@ from numba import cuda, njit, prange
 __all__ = (
     'count_weighted_pairs_3d_cuda',
     'count_weighted_pairs_3d_cpu',
-    'count_weighted_pairs_3d_cpu_serial')
+    'count_weighted_pairs_3d_cpu_serial',
+    'count_weighted_pairs_3d_corrfunc')
 
 
 @cuda.jit
@@ -43,6 +44,16 @@ def count_weighted_pairs_3d_cuda(x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, 
                 if k<=0:
                     break
 
+def count_weighted_pairs_3d_corrfunc(x1, y1, z1, w1, x2, y2, z2, rbins_squared, result):
+    # requires Corrfunc
+    from Corrfunc.theory.DD import DD
+    import multiprocessing
+    rbins = np.sqrt(rbins_squared)
+    threads = multiprocessing.cpu_count()
+    result = DD(0, threads, rbins, x1, y1, z1, weights1=w1, weight_type='pair_product',
+                X2=x2, Y2=y2, Z2=z2, weights2=w2)
+    # different format result, not easy to compare
+    return
 
 @njit(parallel=True)
 def count_weighted_pairs_3d_cpu(x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
