@@ -3,7 +3,7 @@ of the brute-force pair-counter
 """
 from numba import cuda
 import numpy as np
-from bnlchopperhack19 import count_weighted_pairs_3d
+from chopperhack19.mock_obs import count_weighted_pairs_3d_cuda
 from time import time
 
 
@@ -53,7 +53,7 @@ blocks_per_grid = 32
 
 
 start = time()
-count_weighted_pairs_3d[blocks_per_grid, threads_per_block](
+count_weighted_pairs_3d_cuda[blocks_per_grid, threads_per_block](
     d_x1, d_y1, d_z1, d_w1, d_x2, d_y2, d_z2, d_w2, d_rbins_squared, d_results)
 
 results_host = d_results.copy_to_host()
