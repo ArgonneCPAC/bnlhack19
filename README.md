@@ -22,8 +22,8 @@ Source code for the BNL GPU Hackathon
 
 2. Use `conda init` to setup your shell if you did not install it while doing miniconda.
 
-3. Add `module load "cuda/9.0"` to your `~/.bashrc".
+3. Add `module load "cuda/9.0"` to your `~/.bashrc`.
 
-4. Install all of the software you need in your base conda env.
+4. Install all of the software you need in your base conda env (e.g., `numba`, `pytest`, `numpy`, `scipy`, `jax`, etc.).
 
 5. Get a node `srun --pty -A hackathon -p long -t 30:00 /bin/bash`
