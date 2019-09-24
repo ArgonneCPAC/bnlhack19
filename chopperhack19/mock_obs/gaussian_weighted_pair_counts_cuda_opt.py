@@ -33,8 +33,8 @@ def count_weighted_pairs_3d_cuda_smem(
             dsq = cuda.fma(dx, dx, cuda.fma(dy, dy, dz * dz))
 
             k = int((math.log(dsq)/2 - logminr) / dlogr)
-            k = max(0, min(k, nbins-1))
-            cuda.atomic.add(smem, k, wp)
+            if k >= 0 and k < nbins:
+                cuda.atomic.add(smem, k, wp)
 
     cuda.syncthreads()
     if cuda.threadIdx.x == 0:
