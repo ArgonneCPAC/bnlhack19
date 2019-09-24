@@ -92,7 +92,7 @@ def test_accuracy_gpu(func):
     result_gpu = d_result_gpu.copy_to_host()
 
     # check if they are the same
-    testing.assert_allclose(result_cpu, result_gpu)
+    assert np.allclose(result_cpu, result_gpu, rtol=2e-7, atol=0)
 
 
 def test1():
