@@ -4,7 +4,7 @@ import click
 import chopperhack19.mock_obs
 from chopperhack19.mock_obs.tests import random_weighted_points
 from chopperhack19.mock_obs.tests.generate_test_data import (
-    DEFAULT_RBINS_SQUARED)
+    DEFAULT_RBINS_SQUARED, DEFAULT_NMESH)
 from time import time
 
 
@@ -33,8 +33,17 @@ def _main(func, blocks, threads, npoints):
     n2 = 128
     _x1, _y1, _z1, _w1 = random_weighted_points(n1, Lbox, 0)
     _x2, _y2, _z2, _w2 = random_weighted_points(n2, Lbox, 1)
+    if 'cuda_mesh' in func_str:
+        from numba import cuda
 
-    if 'cuda' in func_str:
+        print('blocks:', blocks)
+        print('threads:', threads)
+
+        func[blocks,threads](
+            _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
+            DEFAULT_RBINS_SQUARED, result,
+            DEFAULT_NMESH, DEFAULT_NMESH, DEFAULT_NMESH)
+    else if 'cuda' in func_str:
         from numba import cuda
 
         print('blocks:', blocks)
@@ -52,7 +61,44 @@ def _main(func, blocks, threads, npoints):
     n2 = npoints
     x1, y1, z1, w1 = random_weighted_points(n1, Lbox, 0)
     x2, y2, z2, w2 = random_weighted_points(n2, Lbox, 1)
-    if 'cuda' in func_str:
+    if 'cuda_mesh' in func_str:
+        from chopperhack19.mock_obs import chaining_mesh
+        nx = DEFAULT_NMESH
+        ny = DEFAULT_NMESH
+        nz = DEFAULT_NMESH
+        results = calculate_chaining_mesh(x1, y1, z1, Lbox, Lbox, Lbox, nx, ny, nz)
+        x1out, y1out, z1out, w1out, ixout, iyout, izout, cell_id_out, idx_sorted, cell_id_indices = results
+        results2 = calculate_chaining_mesh(x2, y2, z2, Lbox, Lbox, Lbox, nx, ny, nz)
+        x2out, y2out, z2out, w2out, ix2out, iy2out, iz2out, cell_id2_out, idx_sorted2, cell_id2_indices = results2
+
+        d_x1 = cuda.to_device(x1out.astype(np.float32))
+        d_y1 = cuda.to_device(y1out.astype(np.float32))
+        d_z1 = cuda.to_device(z1out.astype(np.float32))
+        d_w1 = cuda.to_device(w1out.astype(np.float32))
+      
+        d_x2 = cuda.to_device(x2.astype(np.float32))
+        d_y2 = cuda.to_device(y2.astype(np.float32))
+        d_z2 = cuda.to_device(z2.astype(np.float32))
+        d_w2 = cuda.to_device(w2.astype(np.float32))
+
+        d_rbins_squared = cuda.to_device(
+            DEFAULT_RBINS_SQUARED.astype(np.float32))
+        d_result = cuda.device_array_like(result)
+        d_nx = cuda.to_device(DEFAULT_NMESH.astype(np.int))
+        d_ny = cuda.to_device(DEFAULT_NMESH.astype(np.int))
+        d_nz = cuda.to_device(DEFAULT_NMESH.astype(np.int))
+
+        start = time()
+        for _ in range(3):
+            func[blocks, threads](
+                d_x1, d_y1, d_z1, d_w1, d_x2, d_y2, d_z2, d_w2,
+                d_rbins_squared, d_result, d_nx, d_ny, d_nz)
+            results_host = d_result.copy_to_host()
+        end = time()
+        assert np.all(np.isfinite(results_host))
+        runtime = (end-start)/3
+
+    else if 'cuda' in func_str:
         d_x1 = cuda.to_device(x1.astype(np.float32))
         d_y1 = cuda.to_device(y1.astype(np.float32))
         d_z1 = cuda.to_device(z1.astype(np.float32))
