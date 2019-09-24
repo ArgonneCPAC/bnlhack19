@@ -44,8 +44,8 @@ def count_weighted_pairs_3d_cuda_smem(
 
             k = nbins-1
             while dsq <= rbins_squared[k]:
-                lmem[k-1] += wprod
-                k = k-1
+                k -= 1
+                lmem[k] += wprod
                 if k <= 0:
                     break
 
