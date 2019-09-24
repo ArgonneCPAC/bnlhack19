@@ -13,6 +13,8 @@ def count_weighted_pairs_3d_cuda_smem(
     n1 = x1.shape[0]
     n2 = x2.shape[0]
     nbins = _rbins_squared.shape[0]-1
+
+    # putting rbins in local mem is the only thing that seemed to help here
     rbins_squared = cuda.local.array(1024, numba.float32)
     for i in range(nbins+1):
         rbins_squared[i] = _rbins_squared[i]
