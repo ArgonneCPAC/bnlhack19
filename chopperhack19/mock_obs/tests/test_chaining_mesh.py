@@ -17,6 +17,8 @@ def random_points(n, Lbox, seed=DEFAULT_SEED):
 
 
 def test1():
+    """Verify that idx_sorted does indeed sort the output points by cell_id
+    """
     n = 1234
     Lbox = 1000.
 
@@ -33,6 +35,8 @@ def test1():
 
 
 def test2():
+    """Compare brute-force pair counts to chaining-mesh pair counts
+    """
     n1 = 123
     n2 = 4567
     Lbox = 1000.
