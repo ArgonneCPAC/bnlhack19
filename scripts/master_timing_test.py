@@ -24,6 +24,12 @@ def _main(func, blocks, threads, npoints):
     print('func_str:', func_str)
     print('func:', func)
 
+    if 'cuda' in func_str:
+        from numba import cuda
+
+        print('blocks:', blocks)
+        print('threads:', threads)
+
     Lbox = 1000.
     result = np.zeros_like(DEFAULT_RBINS_SQUARED)[:-1]
     result = result.astype(np.float32)
@@ -34,10 +40,6 @@ def _main(func, blocks, threads, npoints):
     _x1, _y1, _z1, _w1 = random_weighted_points(n1, Lbox, 0)
     _x2, _y2, _z2, _w2 = random_weighted_points(n2, Lbox, 1)
     if 'cuda_mesh' in func_str:
-        from numba import cuda
-
-        print('blocks:', blocks)
-        print('threads:', threads)
         _cell_id_indices = np.zeros(len(_x1))
         _cell_id2_indices = np.zeros(len(_x1))
         _ndiv = np.array([DEFAULT_NMESH]*3, dtype=np.int32)
@@ -47,15 +49,18 @@ def _main(func, blocks, threads, npoints):
             DEFAULT_RBINS_SQUARED, result,
             _ndiv, _cell_id_indices, _cell_id2_indices,
             _num_cell2_steps)
-    elif 'cuda' in func_str:
-        from numba import cuda
-
-        print('blocks:', blocks)
-        print('threads:', threads)
-
+    elif 'cuda' in func_str and 'transpose' not in func_str:
         func[blocks, threads](
             _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
             DEFAULT_RBINS_SQUARED, result)
+    elif 'cuda' in func_str and 'transpose' in func_str:
+        ptswts1 = np.stack(
+            [_x1, _y1, _z1, _w1], axis=1).ravel().astype(np.float32)
+        ptswts2 = np.stack(
+            [_x2, _y2, _z2, _w2], axis=1).ravel().astype(np.float32)
+
+        func[blocks, threads](
+            ptswts1, ptswts2, DEFAULT_RBINS_SQUARED, result)
     else:
         func(
             _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
@@ -103,7 +108,7 @@ def _main(func, blocks, threads, npoints):
         end = time()
         assert np.all(np.isfinite(results_host))
         runtime = (end-start)/3
-    elif 'cuda' in func_str:
+    elif 'cuda' in func_str and 'transpose' not in func_str:
         d_x1 = cuda.to_device(x1.astype(np.float32))
         d_y1 = cuda.to_device(y1.astype(np.float32))
         d_z1 = cuda.to_device(z1.astype(np.float32))
@@ -123,6 +128,25 @@ def _main(func, blocks, threads, npoints):
             func[blocks, threads](
                 d_x1, d_y1, d_z1, d_w1, d_x2, d_y2, d_z2, d_w2,
                 d_rbins_squared, d_result)
+            results_host = d_result.copy_to_host()
+        end = time()
+        assert np.all(np.isfinite(results_host))
+        runtime = (end-start)/3
+    elif 'cuda' in func_str and 'transpose' in func_str:
+        ptswts1 = np.stack([x1, y1, z1, w1], axis=1).ravel().astype(np.float32)
+        ptswts2 = np.stack([x2, y2, z2, w2], axis=1).ravel().astype(np.float32)
+
+        d_ptswts1 = cuda.to_device(ptswts1)
+        d_ptswts2 = cuda.to_device(ptswts2)
+
+        d_rbins_squared = cuda.to_device(
+            DEFAULT_RBINS_SQUARED.astype(np.float32))
+        d_result = cuda.device_array_like(result)
+
+        start = time()
+        for _ in range(3):
+            func[blocks, threads](
+                d_ptswts1, d_ptswts2, d_rbins_squared, d_result)
             results_host = d_result.copy_to_host()
         end = time()
         assert np.all(np.isfinite(results_host))
