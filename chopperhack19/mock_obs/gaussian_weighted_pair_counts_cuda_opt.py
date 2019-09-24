@@ -54,7 +54,7 @@ def count_weighted_pairs_3d_cuda_smem(
     #     for i in range(1024):
     #         cuda.atomic.add(result, i, smem[i])
 
-    cuda.atomic.add(smem, 1, lmem[1])
+    # cuda.atomic.add(smem, 1, lmem[1])
     # cuda.syncthreads()
     # if cuda.threadIdx.x == 0:
     #     cuda.atomic.add(result, 1, lmem[1])
