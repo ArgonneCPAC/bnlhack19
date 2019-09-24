@@ -1,0 +1,45 @@
+import numba
+from numba import cuda
+
+__all__ = ('count_weighted_pairs_3d_cuda_smem',)
+
+
+@cuda.jit
+def count_weighted_pairs_3d_cuda_smem(
+        x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
+    start = cuda.grid(1)
+    stride = cuda.gridsize(1)
+
+    n1 = x1.shape[0]
+    n2 = x2.shape[0]
+    nbins = rbins_squared.shape[0]
+
+    smem = cuda.shared.array(1024, numba.float32)  # IDK if we need numba here
+    smem[cuda.threadIdx.x] = 0
+    cuda.synchronize()
+
+    for i in range(start, n1, stride):
+        px = x1[i]
+        py = y1[i]
+        pz = z1[i]
+        pw = w1[i]
+        for j in range(n2):
+            qx = x2[j]
+            qy = y2[j]
+            qz = z2[j]
+            qw = w2[j]
+            dx = px-qx
+            dy = py-qy
+            dz = pz-qz
+            wprod = pw*qw
+            dsq = dx*dx + dy*dy + dz*dz
+
+            k = nbins-1
+            while dsq <= rbins_squared[k]:
+                cuda.atomic.add(smem, k-1, wprod)
+                k = k-1
+                if k <= 0:
+                    break
+
+    if cuda.threadIdx.x < nbins:
+        cuda.atomic.add(result, cuda.threadIdx.x, smem[cuda.threadIdx.x])
