@@ -15,10 +15,10 @@ __all__ = (
 @cuda.jit
 def count_weighted_pairs_3d_cuda_mesh(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result,
-        nx[0], ny[0], nz[0], cell_id_indices, cell_id2_indices):
+        nx, ny, nz, cell_id_indices, cell_id2_indices):
     """Naive pair counting with mesh in cuda. Note x/y/z/w are
     the sorted array output by calculate_chained_mesh.
-    nx[0], ny[0], nz[0] = mesh dimensions
+    nx, ny, nz = mesh dimensions
     """
     start = cuda.grid(1)
     stride = cuda.gridsize(1)
