@@ -38,12 +38,14 @@ def _main(func, blocks, threads, npoints):
 
         print('blocks:', blocks)
         print('threads:', threads)
-
+        _cell_id_indices = np.zeros(len(_x1))
+        _cell_id2_indices = np.zeros(len(_x1))
         func[blocks,threads](
             _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
             DEFAULT_RBINS_SQUARED, result,
-            DEFAULT_NMESH, DEFAULT_NMESH, DEFAULT_NMESH)
-    else if 'cuda' in func_str:
+            DEFAULT_NMESH, DEFAULT_NMESH, DEFAULT_NMESH,
+            _cell_id_indices, _cell_id2_indices)
+    elif 'cuda' in func_str:
         from numba import cuda
 
         print('blocks:', blocks)
@@ -87,18 +89,19 @@ def _main(func, blocks, threads, npoints):
         d_nx = cuda.to_device(DEFAULT_NMESH.astype(np.int))
         d_ny = cuda.to_device(DEFAULT_NMESH.astype(np.int))
         d_nz = cuda.to_device(DEFAULT_NMESH.astype(np.int))
-
+        d_cell_id_indices = cuda.to_device(cell_id_indices)
+        d_cell_id2_indices = cuda.to_device(cell_id2_indices) 
         start = time()
         for _ in range(3):
             func[blocks, threads](
                 d_x1, d_y1, d_z1, d_w1, d_x2, d_y2, d_z2, d_w2,
-                d_rbins_squared, d_result, d_nx, d_ny, d_nz)
+                d_rbins_squared, d_result, d_nx, d_ny, d_nz,
+                d_cell_id_indices, d_cell_id2_indices)
             results_host = d_result.copy_to_host()
         end = time()
         assert np.all(np.isfinite(results_host))
         runtime = (end-start)/3
-
-    else if 'cuda' in func_str:
+    elif 'cuda' in func_str:
         d_x1 = cuda.to_device(x1.astype(np.float32))
         d_y1 = cuda.to_device(y1.astype(np.float32))
         d_z1 = cuda.to_device(z1.astype(np.float32))
