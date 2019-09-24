@@ -44,7 +44,7 @@ def count_weighted_pairs_3d_cuda_smem(
             wprod = pw*qw
             dsq = cuda.fma(dx, dx, cuda.fma(dy, dy, dz*dz))
 
-            for k in nbins:
+            for k in range(nbins):
                 lmem[k] += (wprod * (dsq <= rbins_squared[k+1]))
 
     for k in range(nbins):
