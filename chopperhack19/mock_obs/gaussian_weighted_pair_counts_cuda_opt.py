@@ -19,10 +19,10 @@ def count_weighted_pairs_3d_cuda_smem(
     logminr = math.log(_rbins_squared[0]) / 2
 
     # putting rbins in local mem is the only thing that seemed to help here
-    rbins_squared = cuda.shared.array(1024, numba.float32)
-    if cuda.threadIdx.x == 0:
-        for i in range(nbins+1):
-            rbins_squared[i] = _rbins_squared[i]
+    # rbins_squared = cuda.shared.array(1024, numba.float32)
+    # if cuda.threadIdx.x == 0:
+    #     for i in range(nbins+1):
+    #         rbins_squared[i] = _rbins_squared[i]
 
     smem = cuda.shared.array(1024, numba.float32)
     if cuda.threadIdx.x == 0:
