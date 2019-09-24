@@ -22,7 +22,7 @@ def count_weighted_pairs_3d_cuda_mesh(
     """
     start = cuda.grid(1)
     stride = cuda.gridsize(1)
-    
+    nbins = rbins_squared.shape[0] - 1    
     numcells = nx*ny*nz
     for icell1 in range(start, numcells, stride):
         ifirst1 = cell_id_indices[icell1]
