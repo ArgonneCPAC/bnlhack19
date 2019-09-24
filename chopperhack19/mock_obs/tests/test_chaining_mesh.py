@@ -1,7 +1,7 @@
 """
 """
 import numpy as np
-from chaining_mesh import calculate_chaining_mesh
+from .chaining_mesh import calculate_chaining_mesh
 
 DEFAULT_SEED = 43
 
@@ -128,7 +128,7 @@ def test2():
 
                                     k = nbins-1
                                     while dsq <= rbins_squared[k]:
-                                        counts_mesh[k] += 1
+                                        counts_mesh[k-1] += 1
                                         k=k-1
                                         if k<0: break
 
