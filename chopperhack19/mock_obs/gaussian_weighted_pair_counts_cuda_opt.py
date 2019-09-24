@@ -124,15 +124,17 @@ def count_weighted_pairs_3d_cuda_transpose_noncuml(
     cuda.syncthreads()
 
     for i in range(start, n1, stride):
+        loci = 4*i
         for j in range(n2):
-            dx = ptswts1[4*i] - ptswts2[4*j]
-            dy = ptswts1[4*i + 1] - ptswts2[4*j + 1]
-            dz = ptswts1[4*i + 2] - ptswts2[4*j + 2]
+            locj = 4*j
+            dx = ptswts1[loci] - ptswts2[locj]
+            dy = ptswts1[loci + 1] - ptswts2[locj + 1]
+            dz = ptswts1[loci + 2] - ptswts2[locj + 2]
             dsq = cuda.fma(dx, dx, cuda.fma(dy, dy, dz * dz))
 
             k = int((math.log(dsq)/2 - logminr) / dlogr)
             if k >= 0 and k < nbins:
-                cuda.atomic.add(smem, k, ptswts1[4*i + 3] * ptswts2[4*j + 3])
+                cuda.atomic.add(smem, k, ptswts1[loci + 3] * ptswts2[locj + 3])
 
     cuda.syncthreads()
     if cuda.threadIdx.x == 0:
