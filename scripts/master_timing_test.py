@@ -11,8 +11,8 @@ from time import time
 @click.command()
 @click.option('--func', default='count_weighted_pairs_3d_cpu_serial',
               help='the function to run')
-@click.option('--blocks', default=32)
-@click.option('--threads', default=128)
+@click.option('--blocks', default=512)
+@click.option('--threads', default=512)
 @click.option('--npoints', default=200013)
 def _main(func, blocks, threads, npoints):
 
