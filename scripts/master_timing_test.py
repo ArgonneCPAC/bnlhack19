@@ -34,7 +34,7 @@ def _main(func, blocks, threads, npoints):
     _x1, _y1, _z1, _w1 = random_weighted_points(n1, Lbox, 0)
     _x2, _y2, _z2, _w2 = random_weighted_points(n2, Lbox, 1)
 
-    if 'cuda' in func_str:
+    if 'cuda' in func_str and 'transpose' not in func_str:
         from numba import cuda
 
         print('blocks:', blocks)
