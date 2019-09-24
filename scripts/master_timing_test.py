@@ -64,13 +64,13 @@ def _main(func, blocks, threads, npoints):
     x1, y1, z1, w1 = random_weighted_points(n1, Lbox, 0)
     x2, y2, z2, w2 = random_weighted_points(n2, Lbox, 1)
     if 'cuda_mesh' in func_str:
-        from chopperhack19.mock_obs import chaining_mesh
+        from chopperhack19.mock_obs import chaining_mesh as cm
         nx = DEFAULT_NMESH
         ny = DEFAULT_NMESH
         nz = DEFAULT_NMESH
-        results = calculate_chaining_mesh(x1, y1, z1, Lbox, Lbox, Lbox, nx, ny, nz)
+        results = cm.calculate_chaining_mesh(x1, y1, z1, Lbox, Lbox, Lbox, nx, ny, nz)
         x1out, y1out, z1out, w1out, ixout, iyout, izout, cell_id_out, idx_sorted, cell_id_indices = results
-        results2 = calculate_chaining_mesh(x2, y2, z2, Lbox, Lbox, Lbox, nx, ny, nz)
+        results2 = cm.calculate_chaining_mesh(x2, y2, z2, Lbox, Lbox, Lbox, nx, ny, nz)
         x2out, y2out, z2out, w2out, ix2out, iy2out, iz2out, cell_id2_out, idx_sorted2, cell_id2_indices = results2
 
         d_x1 = cuda.to_device(x1out.astype(np.float32))
