@@ -1,5 +1,6 @@
 import numba
 from numba import cuda
+import math
 
 __all__ = ('count_weighted_pairs_3d_cuda_smem',)
 
@@ -35,7 +36,7 @@ def count_weighted_pairs_3d_cuda_smem(
             dy = py-qy
             dz = pz-qz
             wprod = pw*qw
-            dsq = dx*dx + dy*dy + dz*dz
+            dsq = math.sqrt(dx*dx + dy*dy + dz*dz)
 
             lmem[1] += wprod
             # k = nbins-1
