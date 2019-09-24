@@ -86,7 +86,6 @@ def _main(func, blocks, threads, npoints):
         end = time()
         assert np.all(np.isfinite(results_host))
         runtime = (end-start)/3
-
     elif 'cuda' in func_str and 'transpose' in func_str:
         ptswts1 = np.stack([x1, y1, z1, w1], axis=1).ravel().astype(np.float32)
         ptswts2 = np.stack([x2, y2, z2, w2], axis=1).ravel().astype(np.float32)
@@ -106,7 +105,6 @@ def _main(func, blocks, threads, npoints):
         end = time()
         assert np.all(np.isfinite(results_host))
         runtime = (end-start)/3
-
     else:
         d_x1 = x1
         d_y1 = y1
