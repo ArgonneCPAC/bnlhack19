@@ -1,5 +1,6 @@
 import numba
 from numba import cuda
+import math
 
 __all__ = ('count_weighted_pairs_3d_cuda_smem',)
 
@@ -13,6 +14,9 @@ def count_weighted_pairs_3d_cuda_smem(
     n1 = x1.shape[0]
     n2 = x2.shape[0]
     nbins = _rbins_squared.shape[0]-1
+    dlogr = math.log(
+        math.sqrt(_rbins_squared[1]) / math.sqrt(_rbins_squared[0]))
+    logminr = math.log(_rbins_squared[0]) / 2
 
     # putting rbins in local mem is the only thing that seemed to help here
     rbins_squared = cuda.local.array(1024, numba.float32)
@@ -44,8 +48,9 @@ def count_weighted_pairs_3d_cuda_smem(
             wprod = pw*qw
             dsq = cuda.fma(dx, dx, cuda.fma(dy, dy, dz*dz))
 
-            for k in range(nbins):
-                lmem[k] += (wprod * (dsq <= rbins_squared[k+1]))
+            k = int((math.log(dsq)/2 - logminr) / dlogr)
+            if k >= 0 and k < nbins:
+                lmem[k] += wprod
 
     for k in range(nbins):
         cuda.atomic.add(smem, k, lmem[k])
