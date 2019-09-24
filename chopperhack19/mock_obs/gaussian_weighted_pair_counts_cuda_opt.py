@@ -8,9 +8,9 @@ __all__ = ('count_weighted_pairs_3d_cuda_smem',)
 
 def count_weighted_pairs_3d_cuda_smem(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
-    res = _count_weighted_pairs_3d_cuda_smem(
+    _count_weighted_pairs_3d_cuda_smem(
             x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result)
-    return np.cumsum(res)
+    result[:] = np.cumsum(result)
 
 
 @cuda.jit
