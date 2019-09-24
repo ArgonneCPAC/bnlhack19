@@ -6,13 +6,14 @@ __all__ = ('count_weighted_pairs_3d_cuda_smem',)
 
 @cuda.jit
 def count_weighted_pairs_3d_cuda_smem(
-        x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
+        x1, y1, z1, w1, x2, y2, z2, w2, _rbins_squared, result):
     start = cuda.grid(1)
     stride = cuda.gridsize(1)
 
     n1 = x1.shape[0]
     n2 = x2.shape[0]
-    nbins = rbins_squared.shape[0]-1
+    nbins = _rbins_squared.shape[0]-1
+    rbins_squared = cuda.const.array_like(_rbins_squared)
 
     lmem = cuda.local.array(1024, numba.float32)
     for i in range(1024):
