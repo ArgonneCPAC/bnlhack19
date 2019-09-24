@@ -40,14 +40,13 @@ def _main(func, blocks, threads, npoints):
         print('threads:', threads)
         _cell_id_indices = np.zeros(len(_x1))
         _cell_id2_indices = np.zeros(len(_x1))
-        _nx = np.array([DEFAULT_NMESH], dtype=np.int32)
-        _ny = np.array([DEFAULT_NMESH], dtype=np.int32)
-        _nz = np.array([DEFAULT_NMESH], dtype=np.int32)     
+        _ndiv = np.array([DEFAULT_NMESH]*3, dtype=np.int32)
+        _num_cell2_steps = np.array([1]*3, dtype=np.int32)
         func[blocks,threads](
             _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
             DEFAULT_RBINS_SQUARED, result,
-            _nx, _ny, _nz,
-            _cell_id_indices, _cell_id2_indices)
+            _ndiv, _cell_id_indices, _cell_id2_indices,
+            _num_cell2_steps)
     elif 'cuda' in func_str:
         from numba import cuda
 
@@ -89,17 +88,17 @@ def _main(func, blocks, threads, npoints):
         d_rbins_squared = cuda.to_device(
             DEFAULT_RBINS_SQUARED.astype(np.float32))
         d_result = cuda.device_array_like(result)
-        d_nx = cuda.to_device(np.array([DEFAULT_NMESH], dtype=np.int32))
-        d_ny = cuda.to_device(np.array([DEFAULT_NMESH], dtype=np.int32))
-        d_nz = cuda.to_device(np.array([DEFAULT_NMESH], dtype=np.int32))
+        d_ndiv = cuda.to_device(np.array([DEFAULT_NMESH]*3, dtype=np.int32))
         d_cell_id_indices = cuda.to_device(cell_id_indices)
-        d_cell_id2_indices = cuda.to_device(cell_id2_indices) 
+        d_cell_id2_indices = cuda.to_device(cell_id2_indices)
+        d_num_cell2_steps = cuda.to_device(np.array([1]*3, dtype=np.int32))
         start = time()
         for _ in range(3):
             func[blocks, threads](
                 d_x1, d_y1, d_z1, d_w1, d_x2, d_y2, d_z2, d_w2,
-                d_rbins_squared, d_result, d_nx, d_ny, d_nz,
-                d_cell_id_indices, d_cell_id2_indices)
+                d_rbins_squared, d_result, d_ndiv,
+                d_cell_id_indices, d_cell_id2_indices,
+                d_num_cell2_steps)
             results_host = d_result.copy_to_host()
         end = time()
         assert np.all(np.isfinite(results_host))
