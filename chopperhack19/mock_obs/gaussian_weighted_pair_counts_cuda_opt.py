@@ -47,11 +47,11 @@ def count_weighted_pairs_3d_cuda_smem_noncuml(
         _rbins_squared[1] / _rbins_squared[0]) / 2
     logminr = math.log(_rbins_squared[0]) / 2
 
-    smem = cuda.shared.array(128, numba.float32)
-    if cuda.threadIdx.x == 0:
-        for i in range(128):
-            smem[i] = 0
-    cuda.syncthreads()
+    # smem = cuda.shared.array(128, numba.float32)
+    # if cuda.threadIdx.x == 0:
+    #     for i in range(128):
+    #         smem[i] = 0
+    # cuda.syncthreads()
 
     for i in range(start, n1, stride):
         for j in range(n2):
@@ -65,10 +65,10 @@ def count_weighted_pairs_3d_cuda_smem_noncuml(
                 g = w1[i] * w2[j]
                 # cuda.atomic.add(smem, k, w1[i] * w2[j])
 
-    cuda.syncthreads()
-    if cuda.threadIdx.x == 0:
-        for k in range(nbins):
-            cuda.atomic.add(result, k, smem[k])
+    # cuda.syncthreads()
+    # if cuda.threadIdx.x == 0:
+    #     for k in range(nbins):
+    #         cuda.atomic.add(result, k, smem[k])
 
 
 @cuda.jit(fastmath=True)
