@@ -1,5 +1,4 @@
 import numpy as np
-import numba
 from numba import cuda
 import math
 
@@ -28,16 +27,6 @@ def count_weighted_pairs_3d_cuda_smem(
     logminr = math.log(rbins_squared[0])/2
     dlogr = math.log(rbins_squared[1])/2 - logminr
 
-    lmem = cuda.local.array(1024, numba.float32)
-    for i in range(1024):
-        lmem[i] = 0
-
-    smem = cuda.shared.array(1024, numba.float32)
-    if cuda.threadIdx.x == 0:
-        for i in range(1024):
-            smem[i] = 0
-    cuda.syncthreads()
-
     for i in range(start, n1, stride):
         px = x1[i]
         py = y1[i]
@@ -55,11 +44,4 @@ def count_weighted_pairs_3d_cuda_smem(
             k = int(((math.log(dx*dx + dy*dy + dz*dz)/2) - logminr)/dlogr)
 
             if k >= 0 and k < nbins:
-                lmem[k] += wprod
-
-    for k in range(nbins):
-        cuda.atomic.add(smem, k, lmem[k])
-    cuda.syncthreads()
-    if cuda.threadIdx.x == 0:
-        for k in range(nbins):
-            cuda.atomic.add(result, k, lmem[k])
+                cuda.atomic.add(result, k, wprod)
