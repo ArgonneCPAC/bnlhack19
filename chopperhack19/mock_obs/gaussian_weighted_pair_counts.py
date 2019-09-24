@@ -93,7 +93,7 @@ def count_weighted_pairs_3d_cpu_mp(
     result[:] = np.sum(np.stack(res, axis=1), axis=1)
 
 
-@njit(parallel=True, fastmath=True)
+@njit(fastmath=True)
 def count_weighted_pairs_3d_cpu(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
 
