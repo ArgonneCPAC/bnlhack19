@@ -6,7 +6,7 @@ from chopperhack19.mock_obs.tests import random_weighted_points
 from chopperhack19.mock_obs.tests.generate_test_data import (
     DEFAULT_RBINS_SQUARED, DEFAULT_NMESH)
 from time import time
-
+from numba import int32
 
 @click.command()
 @click.option('--func', default='count_weighted_pairs_3d_cpu_serial',
@@ -86,9 +86,9 @@ def _main(func, blocks, threads, npoints):
         d_rbins_squared = cuda.to_device(
             DEFAULT_RBINS_SQUARED.astype(np.float32))
         d_result = cuda.device_array_like(result)
-        d_nx = cuda.to_device(DEFAULT_NMESH)
-        d_ny = cuda.to_device(DEFAULT_NMESH)
-        d_nz = cuda.to_device(DEFAULT_NMESH)
+        d_nx = cuda.to_device(np.array(DEFAULT_NMESH), dtype=np.int32)
+        d_ny = cuda.to_device(np.array(DEFAULT_NMESH), dtype=np.int32)
+        d_nz = cuda.to_device(np.array(DEFAULT_NMESH), dtype=np.int32)
         d_cell_id_indices = cuda.to_device(cell_id_indices)
         d_cell_id2_indices = cuda.to_device(cell_id2_indices) 
         start = time()

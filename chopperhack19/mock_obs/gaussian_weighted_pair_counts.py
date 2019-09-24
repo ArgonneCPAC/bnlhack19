@@ -15,15 +15,15 @@ __all__ = (
 @cuda.jit
 def count_weighted_pairs_3d_cuda_mesh(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result,
-        nx, ny, nz, cell_id_indices, cell_id2_indices):
+        nx[0], ny[0], nz[0], cell_id_indices, cell_id2_indices):
     """Naive pair counting with mesh in cuda. Note x/y/z/w are
     the sorted array output by calculate_chained_mesh.
-    nx, ny, nz = mesh dimensions
+    nx[0], ny[0], nz[0] = mesh dimensions
     """
     start = cuda.grid(1)
     stride = cuda.gridsize(1)
     nbins = rbins_squared.shape[0] - 1    
-    numcells = nx*ny*nz
+    numcells = nx[0]*ny[0]*nz[0]
     for icell1 in range(start, numcells, stride):
         ifirst1 = cell_id_indices[icell1]
         ilast1 = cell_id_indices[icell1+1]
@@ -34,23 +34,23 @@ def count_weighted_pairs_3d_cuda_mesh(
         w_icell1 = w1[ifirst1:ilast1]
         Ni = ilast1 - ifirst1
         if Ni > 0:
-            ix1 = icell1 // (ny*nz)
-            iy1 = (icell1 - ix1*ny*nz) // nz
-            iz1 = icell1 - (ix1*ny*nz) - (iy1*nz)
+            ix1 = icell1 // (ny[0]*nz[0])
+            iy1 = (icell1 - ix1*ny[0]*nz[0]) // nz[0]
+            iz1 = icell1 - (ix1*ny[0]*nz[0]) - (iy1*nz[0])
 
             leftmost_ix2 = max(0, ix1-1)
             leftmost_iy2 = max(0, iy1-1)
             leftmost_iz2 = max(0, iz1-1)
 
-            rightmost_ix2 = min(ix1+2, nx)
-            rightmost_iy2 = min(iy1+2, ny)
-            rightmost_iz2 = min(iz1+2, nz)
+            rightmost_ix2 = min(ix1+2, nx[0])
+            rightmost_iy2 = min(iy1+2, ny[0])
+            rightmost_iz2 = min(iz1+2, nz[0])
 
             for icell2_ix in range(leftmost_ix2, rightmost_ix2):
                 for icell2_iy in range(leftmost_iy2, rightmost_iy2):
                     for icell2_iz in range(leftmost_iz2, rightmost_iz2):
 
-                        icell2 = icell2_ix*(ny*nz) + icell2_iy*nz + icell2_iz
+                        icell2 = icell2_ix*(ny[0]*nz[0]) + icell2_iy*nz[0] + icell2_iz
                         ifirst2 = cell_id2_indices[icell2]
                         ilast2 = cell_id2_indices[icell2+1]
 
