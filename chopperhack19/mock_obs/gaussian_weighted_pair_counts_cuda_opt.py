@@ -4,6 +4,7 @@ import math
 
 __all__ = (
     'count_weighted_pairs_3d_cuda_smem_noncuml',
+    'count_weighted_pairs_3d_cuda_noncuml_smemsimp',
     'count_weighted_pairs_3d_cuda_noncuml')
 
 
