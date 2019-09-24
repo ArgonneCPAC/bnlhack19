@@ -24,6 +24,12 @@ def _main(func, blocks, threads, npoints):
     print('func_str:', func_str)
     print('func:', func)
 
+    if 'cuda' in func_str:
+        from numba import cuda
+
+        print('blocks:', blocks)
+        print('threads:', threads)
+
     Lbox = 1000.
     result = np.zeros_like(DEFAULT_RBINS_SQUARED)[:-1]
     result = result.astype(np.float32)
@@ -35,11 +41,6 @@ def _main(func, blocks, threads, npoints):
     _x2, _y2, _z2, _w2 = random_weighted_points(n2, Lbox, 1)
 
     if 'cuda' in func_str and 'transpose' not in func_str:
-        from numba import cuda
-
-        print('blocks:', blocks)
-        print('threads:', threads)
-
         func[blocks, threads](
             _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
             DEFAULT_RBINS_SQUARED, result)
