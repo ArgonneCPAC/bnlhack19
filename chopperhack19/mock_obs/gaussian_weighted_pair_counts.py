@@ -12,6 +12,7 @@ __all__ = (
     'count_weighted_pairs_3d_cpu_mp',
     'count_weighted_pairs_3d_cpu')
 
+
 @cuda.jit
 def count_weighted_pairs_3d_cuda_mesh(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result,
@@ -24,6 +25,9 @@ def count_weighted_pairs_3d_cuda_mesh(
     stride = cuda.gridsize(1)
     nbins = rbins_squared.shape[0] - 1
     numcells = nx[0]*ny[0]*nz[0]
+    num_cell2_steps_x = num_cell2_steps[0]
+    num_cell2_steps_y = num_cell2_steps[1]
+    num_cell2_steps_z = num_cell2_steps[2]
     for icell1 in range(start, numcells, stride):
         ifirst1 = cell_id_indices[icell1]
         ilast1 = cell_id_indices[icell1+1]
@@ -38,13 +42,13 @@ def count_weighted_pairs_3d_cuda_mesh(
             iy1 = (icell1 - ix1*ny[0]*nz[0]) // nz[0]
             iz1 = icell1 - (ix1*ny[0]*nz[0]) - (iy1*nz[0])
 
-            leftmost_ix2 = max(0, ix1-num_cell2_steps[0])
-            leftmost_iy2 = max(0, iy1-num_cell2_steps[0])
-            leftmost_iz2 = max(0, iz1-num_cell2_steps[0])
+            leftmost_ix2 = max(0, ix1-num_cell2_steps_x)
+            leftmost_iy2 = max(0, iy1-num_cell2_steps_y)
+            leftmost_iz2 = max(0, iz1-num_cell2_steps_z)
 
-            rightmost_ix2 = min(ix1+num_cell2_steps[0]+1, nx[0])
-            rightmost_iy2 = min(iy1+num_cell2_steps[0]+1, ny[0])
-            rightmost_iz2 = min(iz1+num_cell2_steps[0]+1, nz[0])
+            rightmost_ix2 = min(ix1+num_cell2_steps_x+1, nx[0])
+            rightmost_iy2 = min(iy1+num_cell2_steps_y+1, ny[0])
+            rightmost_iz2 = min(iz1+num_cell2_steps_z+1, nz[0])
 
             for icell2_ix in range(leftmost_ix2, rightmost_ix2):
                 for icell2_iy in range(leftmost_iy2, rightmost_iy2):
@@ -79,6 +83,7 @@ def count_weighted_pairs_3d_cuda_mesh(
                                         cuda.atomic.add(result, k-1, wprod)
                                         k=k-1
                                         if k<0: break
+
 
 @cuda.jit
 def count_weighted_pairs_3d_cuda(
