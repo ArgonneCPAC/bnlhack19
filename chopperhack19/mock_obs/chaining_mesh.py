@@ -3,12 +3,12 @@
 import numpy as np
 
 
-def calculate_chaining_mesh(x, y, z, subvol_xlength, subvol_ylength, subvol_zlength,
+def calculate_chaining_mesh(x, y, z, w, subvol_xlength, subvol_ylength, subvol_zlength,
             ndivs_x, ndivs_y, ndivs_z):
     """
     Parameters
     ----------
-    x, y, z : ndarrays of shape (npts, )
+    x, y, z, w : ndarrays of shape (npts, )
 
     subvol_xyz_lengths : floats
 
@@ -16,7 +16,7 @@ def calculate_chaining_mesh(x, y, z, subvol_xlength, subvol_ylength, subvol_zlen
 
     Returns
     -------
-    xout, yout, zout : ndarrays of shape (npts, )
+    xout, yout, zout, wout: ndarrays of shape (npts, )
         Same as input points, sorted according to cell_id
 
     ixout, iyout, izout : integer ndarrays of shape (npts, )
@@ -54,9 +54,10 @@ def calculate_chaining_mesh(x, y, z, subvol_xlength, subvol_ylength, subvol_zlen
     xout = np.ascontiguousarray(x[idx_sorted], dtype='f4')
     yout = np.ascontiguousarray(y[idx_sorted], dtype='f4')
     zout = np.ascontiguousarray(z[idx_sorted], dtype='f4')
+    wout = np.ascontiguousarray(w[idx_sorted], dtype='f4')
 
     ixout = np.ascontiguousarray(ix[idx_sorted], dtype='i4')
     iyout = np.ascontiguousarray(iy[idx_sorted], dtype='i4')
     izout = np.ascontiguousarray(iz[idx_sorted], dtype='i4')
 
-    return xout, yout, zout, ixout, iyout, izout, cell_id_out, idx_sorted, cell_id_indices
+    return xout, yout, zout, wout, ixout, iyout, izout, cell_id_out, idx_sorted, cell_id_indices
