@@ -62,7 +62,8 @@ def count_weighted_pairs_3d_cuda_smem_noncuml(
 
             k = int((math.log(dsq)/2 - logminr) / dlogr)
             if k >= 0 and k < nbins:
-                cuda.atomic.add(smem, k, w1[i] * w2[j])
+                g = w1[i] * w2[j]
+                # cuda.atomic.add(smem, k, w1[i] * w2[j])
 
     cuda.syncthreads()
     if cuda.threadIdx.x == 0:
@@ -105,10 +106,12 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
             if cuda.threadIdx.x < i:
                 smem[cuda.threadIdx.x] += smem[cuda.threadIdx.x + i]
             cuda.syncthreads()
-            i //= 2
+            i = i // 2
 
         if cuda.threadIdx.x == 0:
             cuda.atomic.add(result, k, smem[0])
+
+        cuda.syncthreads()
 
 
 @cuda.jit(fastmath=True)
