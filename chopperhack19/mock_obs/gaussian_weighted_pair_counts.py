@@ -15,14 +15,14 @@ __all__ = (
 @cuda.jit
 def count_weighted_pairs_3d_cuda_mesh(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result,
-        nx, ny, nz, cell_id_indices, cell_id2_indices):
+        nx, ny, nz, cell_id_indices, cell_id2_indices, num_cell2_steps):
     """Naive pair counting with mesh in cuda. Note x/y/z/w are
     the sorted array output by calculate_chained_mesh.
     nx, ny, nz = mesh dimensions
     """
     start = cuda.grid(1)
     stride = cuda.gridsize(1)
-    nbins = rbins_squared.shape[0] - 1    
+    nbins = rbins_squared.shape[0] - 1
     numcells = nx[0]*ny[0]*nz[0]
     for icell1 in range(start, numcells, stride):
         ifirst1 = cell_id_indices[icell1]
@@ -38,13 +38,13 @@ def count_weighted_pairs_3d_cuda_mesh(
             iy1 = (icell1 - ix1*ny[0]*nz[0]) // nz[0]
             iz1 = icell1 - (ix1*ny[0]*nz[0]) - (iy1*nz[0])
 
-            leftmost_ix2 = max(0, ix1-1)
-            leftmost_iy2 = max(0, iy1-1)
-            leftmost_iz2 = max(0, iz1-1)
+            leftmost_ix2 = max(0, ix1-num_cell2_steps[0])
+            leftmost_iy2 = max(0, iy1-num_cell2_steps[0])
+            leftmost_iz2 = max(0, iz1-num_cell2_steps[0])
 
-            rightmost_ix2 = min(ix1+2, nx[0])
-            rightmost_iy2 = min(iy1+2, ny[0])
-            rightmost_iz2 = min(iz1+2, nz[0])
+            rightmost_ix2 = min(ix1+num_cell2_steps[0]+1, nx[0])
+            rightmost_iy2 = min(iy1+num_cell2_steps[0]+1, ny[0])
+            rightmost_iz2 = min(iz1+num_cell2_steps[0]+1, nz[0])
 
             for icell2_ix in range(leftmost_ix2, rightmost_ix2):
                 for icell2_iy in range(leftmost_iy2, rightmost_iy2):
@@ -64,7 +64,7 @@ def count_weighted_pairs_3d_cuda_mesh(
                             for i in range(0, Ni):
                                 x1tmp = x_icell1[i]
                                 y1tmp = y_icell1[i]
-                                z1tmp = z_icell1[i] 
+                                z1tmp = z_icell1[i]
                                 w1tmp = w_icell1[i]
                                 for j in range(0, Nj):
                                     #calculate the square distance
@@ -73,7 +73,7 @@ def count_weighted_pairs_3d_cuda_mesh(
                                     dz = z1tmp - z_icell2[j]
                                     wprod = w1tmp*w_icell2[j]
                                     dsq = dx*dx + dy*dy + dz*dz
-     
+
                                     k = nbins-1
                                     while dsq <= rbins_squared[k]:
                                         cuda.atomic.add(result, k-1, wprod)
