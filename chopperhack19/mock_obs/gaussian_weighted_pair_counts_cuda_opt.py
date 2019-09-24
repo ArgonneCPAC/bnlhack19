@@ -61,8 +61,8 @@ def count_weighted_pairs_3d_cuda_smem_noncuml(
             dsq = cuda.fma(dx, dx, cuda.fma(dy, dy, dz * dz))
 
             k = int((math.log(dsq)/2 - logminr) / dlogr)
-            if k >= 0 and k < nbins:
-                g = w1[i] * w2[j]
+            # if k >= 0 and k < nbins:
+            #     g = w1[i] * w2[j]
                 # cuda.atomic.add(smem, k, w1[i] * w2[j])
 
     # cuda.syncthreads()
