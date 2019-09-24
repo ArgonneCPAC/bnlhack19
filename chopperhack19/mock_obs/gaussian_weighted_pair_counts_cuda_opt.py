@@ -41,7 +41,7 @@ def count_weighted_pairs_3d_cuda_smem(
             dy = py-qy
             dz = pz-qz
             wprod = pw*qw
-            k = int(((math.log(dx*dx + dy*dy + dz*dz)/2) - dlogr)/dlogr)
+            k = int(((math.log(dx*dx + dy*dy + dz*dz)/2) - logminr)/dlogr)
 
             if k >= 0 and k < nbins:
                 lmem[k] += wprod
