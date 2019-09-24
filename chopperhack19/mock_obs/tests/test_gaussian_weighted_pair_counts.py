@@ -9,6 +9,7 @@ from .. import (
     count_weighted_pairs_3d_cpu,
     count_weighted_pairs_3d_cpu_mp,
     count_weighted_pairs_3d_cuda,
+    count_weighted_pairs_3d_cuda_smem,
     count_weighted_pairs_3d_cpu_corrfunc)
 from .generate_test_data import random_weighted_points
 
@@ -17,8 +18,8 @@ DEFAULT_SEED = 43
 
 
 @pytest.mark.parametrize('func', [
-        count_weighted_pairs_3d_cpu_mp,
-        count_weighted_pairs_3d_cpu_corrfunc])
+    count_weighted_pairs_3d_cpu_mp,
+    count_weighted_pairs_3d_cpu_corrfunc])
 def test_accuracy_cpu(func):
     # generate mocks
     n1 = 1000
@@ -47,7 +48,9 @@ def test_accuracy_cpu(func):
     testing.assert_allclose(result_cpu, result_cpu_func)
 
 
-@pytest.mark.parametrize('func', [count_weighted_pairs_3d_cuda])
+@pytest.mark.parametrize('func', [
+    count_weighted_pairs_3d_cuda,
+    count_weighted_pairs_3d_cuda_smem])
 def test_accuracy_gpu(func):
     # generate mocks
     n1 = 1000
@@ -89,7 +92,7 @@ def test_accuracy_gpu(func):
     result_gpu = d_result_gpu.copy_to_host()
 
     # check if they are the same
-    testing.assert_allclose(result_cpu, result_gpu)
+    assert np.allclose(result_cpu, result_gpu, rtol=2e-7, atol=0)
 
 
 def test1():
