@@ -2,7 +2,6 @@
 """
 import numpy as np
 from chaining_mesh import calculate_chaining_mesh
-from thechopper import points_in_buffered_rectangle
 
 DEFAULT_SEED = 43
 
@@ -51,11 +50,11 @@ def test2():
     counts_mesh = np.zeros(nbins).astype(int)
     counts_nomesh = np.zeros(nbins).astype(int)
 
-    x1, y1, z1 = random_points(n1, Lbox)
+    x1, y1, z1 = random_points(n1, Lbox, 0)
     results = calculate_chaining_mesh(x1, y1, z1, Lbox, Lbox, Lbox, nx, ny, nz)
     x1out, y1out, z1out, ixout, iyout, izout, cell_id_out, idx_sorted, cell_id_indices = results
 
-    x2, y2, z2 = random_points(n2, Lbox)
+    x2, y2, z2 = random_points(n2, Lbox, 1)
     results2 = calculate_chaining_mesh(x2, y2, z2, Lbox, Lbox, Lbox, nx, ny, nz)
     x2out, y2out, z2out, ix2out, iy2out, iz2out, cell_id2_out, idx_sorted2, cell_id2_indices = results2
 
@@ -133,5 +132,7 @@ def test2():
                                         k=k-1
                                         if k<0: break
 
+    print(counts_nomesh)
+    print(counts_mesh)
     assert np.all(counts_mesh == counts_nomesh)
 
