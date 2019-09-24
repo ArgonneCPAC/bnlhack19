@@ -18,9 +18,9 @@ def count_weighted_pairs_3d_cuda_smem(
         math.sqrt(_rbins_squared[1]) / math.sqrt(_rbins_squared[0]))
     logminr = math.log(_rbins_squared[0]) / 2
 
-    smem = cuda.shared.array(1024, numba.float32)
+    smem = cuda.shared.array(128, numba.float32)
     if cuda.threadIdx.x == 0:
-        for i in range(1024):
+        for i in range(128):
             smem[i] = 0
     cuda.syncthreads()
 
