@@ -5,7 +5,7 @@ import math
 __all__ = ('count_weighted_pairs_3d_cuda_smem',)
 
 
-@cuda.jit
+@cuda.jit(fastmath=True)
 def count_weighted_pairs_3d_cuda_smem(
         x1, y1, z1, w1, x2, y2, z2, w2, _rbins_squared, result):
     start = cuda.grid(1)
@@ -23,6 +23,8 @@ def count_weighted_pairs_3d_cuda_smem(
     for i in range(nbins+1):
         rbins_squared[i] = _rbins_squared[i]
 
+    tmem = cuda.local.array(4, numba.float32)
+
     lmem = cuda.local.array(1024, numba.float32)
     for i in range(1024):
         lmem[i] = 0
@@ -33,24 +35,20 @@ def count_weighted_pairs_3d_cuda_smem(
     cuda.syncthreads()
 
     for i in range(start, n1, stride):
-        px = x1[i]
-        py = y1[i]
-        pz = z1[i]
-        pw = w1[i]
         for j in range(n2):
-            qx = x2[j]
-            qy = y2[j]
-            qz = z2[j]
-            qw = w2[j]
-            dx = px-qx
-            dy = py-qy
-            dz = pz-qz
-            wprod = pw*qw
-            dsq = cuda.fma(dx, dx, cuda.fma(dy, dy, dz*dz))
+            tmem[0] = x1[i] - x2[j]
+            tmem[1] = y1[i] - y2[j]
+            tmem[2] = z1[i] - z2[j]
+            tmem[3] = w1[i] * w2[j]
+            dsq = cuda.fma(
+                tmem[0], tmem[0],
+                cuda.fma(
+                    tmem[1], tmem[1],
+                    tmem[2] * tmem[2]))
 
             k = int((math.log(dsq)/2 - logminr) / dlogr)
             if k >= 0 and k < nbins:
-                lmem[k] += wprod
+                lmem[k] += tmem[3]
 
     for k in range(nbins):
         cuda.atomic.add(smem, k, lmem[k])
