@@ -30,6 +30,37 @@ def count_weighted_pairs_3d_cuda_noncuml(
             if k >= 0 and k < nbins:
                 cuda.atomic.add(result, k, w1[i] * w2[j])
 
+@cuda.jit(fastmath=True)
+def count_weighted_pairs_3d_cuda_noncuml_smemsimp(
+        x1, y1, z1, w1, x2, y2, z2, w2, _rbins_squared, result):
+    start = cuda.grid(1)
+    stride = cuda.gridsize(1)
+
+    n1 = x1.shape[0]
+    n2 = x2.shape[0]
+    nbins = _rbins_squared.shape[0]-1
+    dlogr = math.log(_rbins_squared[1] / _rbins_squared[0]) / 2
+    logminr = math.log(_rbins_squared[0]) / 2
+    # make a shared array of size larger than the block size
+    shared_counts = cuda.shared.array(2048, numba.float32)
+    thread_idx = cuda.threadIdx.x
+    shared_counts[thread_idx] = 0
+    # assume minimum block size 
+    for i in range(start, n1, stride):
+        for j in range(n2):
+            dx = x1[i] - x2[j]
+            dy = y1[i] - y2[j]
+            dz = z1[i] - z2[j]
+            dsq = cuda.fma(dx, dx, cuda.fma(dy, dy, dz * dz))
+
+            k = int((math.log(dsq)/2 - logminr) / dlogr)
+            if k >= 0 and k < nbins:
+                cuda.atomic.add(shared_counts, k, w1[i] * w2[j])
+    cuda.syncthreads()
+    if thread_idx == 0:
+        for k in range(nbins):
+            cuda.atomic.add(result, k, shared_counts[k])
+    cuda.syncthreads()
 
 @cuda.jit(fastmath=True)
 def count_weighted_pairs_3d_cuda_smem_noncuml(
