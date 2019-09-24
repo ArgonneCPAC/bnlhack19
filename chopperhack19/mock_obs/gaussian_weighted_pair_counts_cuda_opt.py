@@ -16,11 +16,14 @@ def count_weighted_pairs_3d_cuda_smem(
     nbins = rbins_squared.shape[0]
 
     lmem = cuda.local.array(1024, numba.float32)
-    # smem = cuda.shared.array(1024, numba.float32)  # IDK if we need numba here
-    # if cuda.threadIdx.x == 0:
-    #     for i in range(1024):
-    #         smem[i] = 0
-    # cuda.syncthreads()
+    for i in range(1024):
+        lmem[i] = 0
+
+    smem = cuda.shared.array(1024, numba.float32)
+    if cuda.threadIdx.x == 0:
+        for i in range(1024):
+            smem[i] = 0
+    cuda.syncthreads()
 
     for i in range(start, n1, stride):
         px = x1[i]
@@ -50,4 +53,8 @@ def count_weighted_pairs_3d_cuda_smem(
     # if cuda.threadIdx.x == 0:
     #     for i in range(1024):
     #         cuda.atomic.add(result, i, smem[i])
-    cuda.atomic.add(result, 1, lmem[1])
+
+    cuda.atomic.add(smem, 1, lmem[1])
+    cuda.syncthreads()
+    if cuda.threadIdx.x == 0:
+        cuda.atomic.add(result, 1, lmem[1])
