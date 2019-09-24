@@ -23,8 +23,6 @@ def count_weighted_pairs_3d_cuda_smem(
     for i in range(nbins+1):
         rbins_squared[i] = _rbins_squared[i]
 
-    tmem = cuda.local.array(4, numba.float32)
-
     lmem = cuda.local.array(1024, numba.float32)
     for i in range(1024):
         lmem[i] = 0
@@ -36,19 +34,15 @@ def count_weighted_pairs_3d_cuda_smem(
 
     for i in range(start, n1, stride):
         for j in range(n2):
-            tmem[0] = x1[i] - x2[j]
-            tmem[1] = y1[i] - y2[j]
-            tmem[2] = z1[i] - z2[j]
-            tmem[3] = w1[i] * w2[j]
-            dsq = cuda.fma(
-                tmem[0], tmem[0],
-                cuda.fma(
-                    tmem[1], tmem[1],
-                    tmem[2] * tmem[2]))
+            dx = x1[i] - x2[j]
+            dy = y1[i] - y2[j]
+            dz = z1[i] - z2[j]
+            wp = w1[i] * w2[j]
+            dsq = cuda.fma(dx, dx, cuda.fma(dy, dy, dz * dz))
 
             k = int((math.log(dsq)/2 - logminr) / dlogr)
             if k >= 0 and k < nbins:
-                lmem[k] += tmem[3]
+                lmem[k] += wp
 
     for k in range(nbins):
         cuda.atomic.add(smem, k, lmem[k])
