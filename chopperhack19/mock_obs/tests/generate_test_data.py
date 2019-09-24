@@ -23,4 +23,6 @@ def random_weighted_points(n, Lbox, seed=DEFAULT_SEED):
     data = rng.uniform(0, 1, n*4)
     x, y, z, w = (
         data[:n]*Lbox, data[n:2*n]*Lbox, data[2*n:3*n]*Lbox, data[3*n:])
-    return x, y, z, w
+    return (
+        x.astype(np.float32), y.astype(np.float32), z.astype(np.float32),
+        w.astype(np.float32))

@@ -26,6 +26,7 @@ def _main(func, blocks, threads, npoints):
 
     Lbox = 1000.
     result = np.zeros_like(DEFAULT_RBINS_SQUARED)[:-1]
+    result = result.astype(np.float32)
 
     n1 = 128
     n2 = 128
@@ -52,17 +53,18 @@ def _main(func, blocks, threads, npoints):
     x2, y2, z2, w2 = random_weighted_points(n2, Lbox, 1)
 
     if 'cuda' in func_str:
-        d_x1 = cuda.to_device(x1)
-        d_y1 = cuda.to_device(y1)
-        d_z1 = cuda.to_device(z1)
-        d_w1 = cuda.to_device(w1)
+        d_x1 = cuda.to_device(x1.astype(np.float32))
+        d_y1 = cuda.to_device(y1.astype(np.float32))
+        d_z1 = cuda.to_device(z1.astype(np.float32))
+        d_w1 = cuda.to_device(w1.astype(np.float32))
 
-        d_x2 = cuda.to_device(x2)
-        d_y2 = cuda.to_device(y2)
-        d_z2 = cuda.to_device(z2)
-        d_w2 = cuda.to_device(w2)
+        d_x2 = cuda.to_device(x2.astype(np.float32))
+        d_y2 = cuda.to_device(y2.astype(np.float32))
+        d_z2 = cuda.to_device(z2.astype(np.float32))
+        d_w2 = cuda.to_device(w2.astype(np.float32))
 
-        d_rbins_squared = cuda.to_device(DEFAULT_RBINS_SQUARED)
+        d_rbins_squared = cuda.to_device(
+            DEFAULT_RBINS_SQUARED.astype(np.float32))
         d_result = cuda.device_array_like(result)
 
         start = time()
