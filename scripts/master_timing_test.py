@@ -28,6 +28,7 @@ def _main(func, blocks, threads, npoints):
     result = np.zeros_like(DEFAULT_RBINS_SQUARED)[:-1]
     result = result.astype(np.float32)
 
+    # get numba to compile once
     n1 = 128
     n2 = 128
     _x1, _y1, _z1, _w1 = random_weighted_points(n1, Lbox, 0)
@@ -68,13 +69,14 @@ def _main(func, blocks, threads, npoints):
         d_result = cuda.device_array_like(result)
 
         start = time()
-        func[blocks, threads](
-            d_x1, d_y1, d_z1, d_w1, d_x2, d_y2, d_z2, d_w2,
-            d_rbins_squared, d_result)
-        results_host = d_result.copy_to_host()
+        for _ in range(3):
+            func[blocks, threads](
+                d_x1, d_y1, d_z1, d_w1, d_x2, d_y2, d_z2, d_w2,
+                d_rbins_squared, d_result)
+            results_host = d_result.copy_to_host()
         end = time()
         assert np.all(np.isfinite(results_host))
-        runtime = end-start
+        runtime = (end-start)/3
     else:
         d_x1 = x1
         d_y1 = y1
@@ -90,11 +92,12 @@ def _main(func, blocks, threads, npoints):
         d_result = result
 
         start = time()
-        func(
-            d_x1, d_y1, d_z1, d_w1, d_x2, d_y2, d_z2, d_w2,
-            d_rbins_squared, d_result)
+        for _ in range(3):
+            func(
+                d_x1, d_y1, d_z1, d_w1, d_x2, d_y2, d_z2, d_w2,
+                d_rbins_squared, d_result)
         end = time()
-        runtime = end-start
+        runtime = (end-start)/3
 
     print('time:', runtime)
 
