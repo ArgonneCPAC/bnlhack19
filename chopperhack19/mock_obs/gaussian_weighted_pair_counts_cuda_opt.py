@@ -14,7 +14,7 @@ def count_weighted_pairs_3d_cuda_smem(
     n2 = x2.shape[0]
     nbins = rbins_squared.shape[0]
 
-    smem = cuda.shared.array(1024, numba.float32)  # IDK if we need numba here
+    # smem = cuda.shared.array(1024, numba.float32)  # IDK if we need numba here
     # if cuda.threadIdx.x == 0:
     #     for i in range(1024):
     #         smem[i] = 0
@@ -38,7 +38,7 @@ def count_weighted_pairs_3d_cuda_smem(
 
             k = nbins-1
             while dsq <= rbins_squared[k]:
-                smem[k-1] += wprod
+                result[k-1] += wprod
                 # cuda.atomic.add(smem, k-1, wprod)
                 k = k-1
                 if k <= 0:
