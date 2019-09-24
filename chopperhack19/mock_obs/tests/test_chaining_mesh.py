@@ -20,7 +20,7 @@ def test1():
     n = 1234
     Lbox = 1000.
 
-    nx, ny, nz = 3, 4, 5
+    nx, ny, nz = 5, 5, 5
 
     x, y, z = random_points(n, Lbox)
 
