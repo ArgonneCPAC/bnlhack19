@@ -38,7 +38,8 @@ def count_weighted_pairs_3d_cuda_smem(
             wprod = pw*qw
             dsq = math.sqrt(dx*dx + dy*dy + dz*dz)
 
-            lmem[1] += wprod
+            cuda.atomic.add(result, 0, wprod)
+            # lmem[1] += wprod
             # k = nbins-1
             # while dsq <= rbins_squared[k]:
             #     lmem[k-1] += wprod
