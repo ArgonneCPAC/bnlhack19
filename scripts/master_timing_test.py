@@ -68,9 +68,9 @@ def _main(func, blocks, threads, npoints):
         nx = DEFAULT_NMESH
         ny = DEFAULT_NMESH
         nz = DEFAULT_NMESH
-        results = cm.calculate_chaining_mesh(x1, y1, z1, Lbox, Lbox, Lbox, nx, ny, nz)
+        results = cm.calculate_chaining_mesh(x1, y1, z1, w1, Lbox, Lbox, Lbox, nx, ny, nz)
         x1out, y1out, z1out, w1out, ixout, iyout, izout, cell_id_out, idx_sorted, cell_id_indices = results
-        results2 = cm.calculate_chaining_mesh(x2, y2, z2, Lbox, Lbox, Lbox, nx, ny, nz)
+        results2 = cm.calculate_chaining_mesh(x2, y2, z2, w2, Lbox, Lbox, Lbox, nx, ny, nz)
         x2out, y2out, z2out, w2out, ix2out, iy2out, iz2out, cell_id2_out, idx_sorted2, cell_id2_indices = results2
 
         d_x1 = cuda.to_device(x1out.astype(np.float32))
@@ -86,9 +86,9 @@ def _main(func, blocks, threads, npoints):
         d_rbins_squared = cuda.to_device(
             DEFAULT_RBINS_SQUARED.astype(np.float32))
         d_result = cuda.device_array_like(result)
-        d_nx = cuda.to_device(DEFAULT_NMESH.astype(np.int))
-        d_ny = cuda.to_device(DEFAULT_NMESH.astype(np.int))
-        d_nz = cuda.to_device(DEFAULT_NMESH.astype(np.int))
+        d_nx = cuda.to_device(DEFAULT_NMESH)
+        d_ny = cuda.to_device(DEFAULT_NMESH)
+        d_nz = cuda.to_device(DEFAULT_NMESH)
         d_cell_id_indices = cuda.to_device(cell_id_indices)
         d_cell_id2_indices = cuda.to_device(cell_id2_indices) 
         start = time()
