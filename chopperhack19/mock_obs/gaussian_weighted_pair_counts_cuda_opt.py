@@ -43,7 +43,7 @@ def count_weighted_pairs_3d_cuda_noncuml_smemsimp(
     dlogr = math.log(_rbins_squared[1] / _rbins_squared[0]) / 2
     logminr = math.log(_rbins_squared[0]) / 2
     # make a shared array of size larger than the block size
-    shared_counts = cuda.shared.array(2048, numba.float32)
+    shared_counts = cuda.shared.array(128, numba.float32)
     thread_idx = cuda.threadIdx.x
     shared_counts[thread_idx] = 0
     # assume minimum block size 
@@ -58,9 +58,9 @@ def count_weighted_pairs_3d_cuda_noncuml_smemsimp(
             if k >= 0 and k < nbins:
                 cuda.atomic.add(shared_counts, k, w1[i] * w2[j])
     cuda.syncthreads()
-    if thread_idx == 0:
-        for k in range(nbins):
-            cuda.atomic.add(result, k, shared_counts[k])
+    # why not just use MORE threads for this
+    if thread_idx < nbins:
+        cuda.atomic.add(result, thread_idx, shared_counts[thread_idx])
     cuda.syncthreads()
 
 @cuda.jit(fastmath=True)
