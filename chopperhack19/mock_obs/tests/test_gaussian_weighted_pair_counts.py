@@ -9,7 +9,7 @@ from .. import (
     count_weighted_pairs_3d_cpu,
     count_weighted_pairs_3d_cpu_mp,
     count_weighted_pairs_3d_cuda,
-    count_weighted_pairs_3d_cuda_smem,
+    count_weighted_pairs_3d_cuda_smem_testing,
     count_weighted_pairs_3d_cpu_corrfunc)
 from .generate_test_data import random_weighted_points
 
@@ -50,7 +50,7 @@ def test_accuracy_cpu(func):
 
 @pytest.mark.parametrize('func', [
     count_weighted_pairs_3d_cuda,
-    count_weighted_pairs_3d_cuda_smem])
+    count_weighted_pairs_3d_cuda_smem_testing])
 def test_accuracy_gpu(func):
     # generate mocks
     n1 = 1000

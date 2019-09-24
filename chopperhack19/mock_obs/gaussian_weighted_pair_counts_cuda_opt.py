@@ -3,18 +3,21 @@ import numba
 from numba import cuda
 import math
 
-__all__ = ('count_weighted_pairs_3d_cuda_smem',)
+__all__ = (
+    'count_weighted_pairs_3d_cuda_smem',
+    'count_weighted_pairs_3d_cuda_smem_testing',
+    )
 
 
-def count_weighted_pairs_3d_cuda_smem(
+def count_weighted_pairs_3d_cuda_smem_testing(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
-    _count_weighted_pairs_3d_cuda_smem(
+    count_weighted_pairs_3d_cuda_smem(
             x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result)
     result[:] = np.cumsum(result)
 
 
 @cuda.jit
-def _count_weighted_pairs_3d_cuda_smem(
+def count_weighted_pairs_3d_cuda_smem(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
     start = cuda.grid(1)
     stride = cuda.gridsize(1)
