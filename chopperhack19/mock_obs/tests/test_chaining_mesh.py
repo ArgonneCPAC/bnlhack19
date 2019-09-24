@@ -1,7 +1,7 @@
 """
 """
 import numpy as np
-from .chaining_mesh import calculate_chaining_mesh
+from ..chaining_mesh import calculate_chaining_mesh
 
 DEFAULT_SEED = 43
 
