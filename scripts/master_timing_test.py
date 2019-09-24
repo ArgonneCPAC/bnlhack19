@@ -13,7 +13,8 @@ from time import time
               help='the function to run')
 @click.option('--blocks', default=32)
 @click.option('--threads', default=128)
-def _main(func, blocks, threads):
+@click.option('--npoints', default=200013)
+def _main(func, blocks, threads, npoints):
 
     func_str = func
     func = getattr(chopperhack19.mock_obs, func)
@@ -45,8 +46,8 @@ def _main(func, blocks, threads):
             _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
             DEFAULT_RBINS_SQUARED, result)
 
-    n1 = 200013
-    n2 = 200015
+    n1 = npoints
+    n2 = npoints
     x1, y1, z1, w1 = random_weighted_points(n1, Lbox, 0)
     x2, y2, z2, w2 = random_weighted_points(n2, Lbox, 1)
 
