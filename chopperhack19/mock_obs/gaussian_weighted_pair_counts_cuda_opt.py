@@ -15,7 +15,9 @@ def count_weighted_pairs_3d_cuda_smem(
     nbins = rbins_squared.shape[0]
 
     smem = cuda.shared.array(1024, numba.float32)  # IDK if we need numba here
-    smem[cuda.threadIdx.x] = 0
+    if cuda.threadIdx.x == 0:
+        for i in range(1024):
+            smem[i] = 0
     cuda.synchronize()
 
     for i in range(start, n1, stride):
