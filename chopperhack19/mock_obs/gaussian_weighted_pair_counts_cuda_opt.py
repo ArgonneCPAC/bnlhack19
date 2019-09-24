@@ -43,5 +43,6 @@ def count_weighted_pairs_3d_cuda_smem(
                 if k <= 0:
                     break
 
-    if cuda.threadIdx.x < nbins:
-        cuda.atomic.add(result, cuda.threadIdx.x, smem[cuda.threadIdx.x])
+    if cuda.threadIdx.x == 0:
+        for i in range(1024):
+            cuda.atomic.add(result, i, smem[i])
