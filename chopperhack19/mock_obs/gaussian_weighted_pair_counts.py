@@ -7,7 +7,7 @@ import multiprocessing
 
 __all__ = (
     'count_weighted_pairs_3d_cuda',
-    'count_weighted_pairs_3d_cpu_corrfunc')
+    'count_weighted_pairs_3d_cpu_corrfunc',
     'count_weighted_pairs_3d_cpu_mp',
     'count_weighted_pairs_3d_cpu')
 
@@ -48,16 +48,21 @@ def count_weighted_pairs_3d_cuda(
                 if k <= 0:
                     break
 
-def count_weighted_pairs_3d_cpu_corrfunc(x1, y1, z1, w1, x2, y2, z2, rbins_squared, result):
+
+def count_weighted_pairs_3d_cpu_corrfunc(
+        x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
     # requires Corrfunc
     from Corrfunc.theory.DD import DD
     import multiprocessing
     rbins = np.sqrt(rbins_squared)
     threads = multiprocessing.cpu_count()
-    result = DD(0, threads, rbins, x1, y1, z1, weights1=w1, weight_type='pair_product',
-                X2=x2, Y2=y2, Z2=z2, weights2=w2)
-    # different format result, not easy to compare
-    return
+    _result = DD(
+        0, threads, rbins, x1, y1, z1,
+        weights1=w1, weight_type='pair_product',
+        X2=x2, Y2=y2, Z2=z2, weights2=w2,
+        periodic=False)
+    result[:] = np.cumsum(_result['weightavg'] * _result['npairs'])
+
 
 def count_weighted_pairs_3d_cpu_mp(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
@@ -73,18 +78,19 @@ def count_weighted_pairs_3d_cpu_mp(
         end = start + n_per
         if i == multiprocessing.cpu_count()-1:
             end = n1
+        _result = np.zeros_like(result)
         jobs.append(joblib.delayed(count_weighted_pairs_3d_cpu)(
             x1[start:end],
             y1[start:end],
             z1[start:end],
-            w1[start:end], x2, y2, z2, w2, rbins_squared, result
+            w1[start:end], x2, y2, z2, w2, rbins_squared, _result
         ))
 
     with joblib.Parallel(
             n_jobs=multiprocessing.cpu_count(), backend='loky') as p:
         res = p(jobs)
 
-    return np.sum(np.stack(res, axis=1), axis=1)
+    result[:] = np.sum(np.stack(res, axis=1), axis=1)
 
 
 @njit()
