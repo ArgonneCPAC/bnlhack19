@@ -96,7 +96,7 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
 
                 _k = int((math.log(dsq)/2 - logminr) / dlogr)
                 if k == _k:
-                    smem[cuda.threadIdx.x] += (w1[i] * w2[j])
+                    smem[cuda.threadIdx.x] = smem[cuda.threadIdx.x] + (w1[i] * w2[j])
 
         # cuda.syncthreads()
         #
