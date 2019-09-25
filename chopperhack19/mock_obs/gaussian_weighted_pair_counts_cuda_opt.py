@@ -9,6 +9,7 @@ __all__ = (  # noqa
     'count_weighted_pairs_3d_cuda_transpose_noncuml',
     'count_weighted_pairs_3d_cuda_smemload_noncuml',
     'count_weighted_pairs_3d_cuda_revchop_noncuml',
+    'count_weighted_pairs_3d_cuda_noncuml_pairsonly',
     'count_weighted_pairs_3d_cuda_noncuml')
 
 
