@@ -168,6 +168,7 @@ def _main(func, blocks, threads, npoints):
                 d_rbins_squared, d_result)
             results_host = d_result.copy_to_host()
         end = time()
+        runtime = (end-start)/3
     elif 'cuda' in func_str and 'transpose' not in func_str:
         d_x1 = cuda.to_device(x1.astype(np.float32))
         d_y1 = cuda.to_device(y1.astype(np.float32))
