@@ -85,7 +85,7 @@ def _count_weighted_pairs_3d_cuda_revchop_noncuml(
     smem = cuda.shared.array(512, numba.float32)
 
     g0 = 0
-    g1 = 1
+    g1 = 0
     for i in range(start, n1, stride):
         for j in range(n2):
             dx = x1[i] - x2[j]
