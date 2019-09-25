@@ -63,7 +63,7 @@ def _main(func, blocks, threads, npoints):
         yperiod = Lbox
         zperiod = Lbox
         x1out, y1out, z1out, w1out, cell1out, x2out, y2out, z2out, w2out, indx2 = (
-            cm.get_double_chopped_data(x1, y1, z1, w1, x2, y2, z2, w2, nx1, ny1, nz1, nx2, ny2, nz2,
+            cm.get_double_chopped_data(_x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2, nx1, ny1, nz1, nx2, ny2, nz2,
                                     rmax_x, rmax_y, rmax_z, xperiod, yperiod, zperiod))
         func[blocks, threads](
             x1out, y1out, z1out, w1out, cell1out, x2out, y2out, z2out, w2out, indx2,
