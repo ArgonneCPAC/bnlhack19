@@ -49,6 +49,7 @@ def count_weighted_pairs_3d_cuda_noncuml_pairsonly(
     dlogr = math.log(_rbins_squared[1] / _rbins_squared[0]) / 2
     logminr = math.log(_rbins_squared[0]) / 2
 
+    g = 0
     for i in range(start, n1, stride):
         for j in range(n2):
             dx = x1[i] - x2[j]
@@ -58,7 +59,9 @@ def count_weighted_pairs_3d_cuda_noncuml_pairsonly(
 
             k = int((math.log(dsq)/2 - logminr) / dlogr)
             if k >= 0 and k < nbins:
-                result[k] += (w1[i] * w2[j])
+                g += (w1[i] * w2[j])
+
+    result[0] += g
 
 
 SMEM_CHUNK_SIZE = 2048
