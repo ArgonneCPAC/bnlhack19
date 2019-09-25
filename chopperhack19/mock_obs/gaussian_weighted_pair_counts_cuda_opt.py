@@ -187,7 +187,7 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
 
         if cuda.threadIdx.x == 0:
             cuda.atomic.add(result, k, smem[0])
-""").render(n_bins=64))
+""").render(n_bins=2))
 
 
 @cuda.jit(fastmath=True)
