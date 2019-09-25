@@ -86,8 +86,7 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
     smem = cuda.shared.array(512, numba.float32)
 
     for k in range(1):
-        smem[cuda.threadIdx.x] = 0
-
+        g = 0
         for i in range(start, n1, stride):
             for j in range(n2):
                 dx = x1[i] - x2[j]
@@ -97,7 +96,9 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
 
                 _k = int((math.log(dsq)/2 - logminr) / dlogr)
                 if k == _k:
-                    smem[cuda.threadIdx.x] += (w1[i] * w2[j])
+                    g += (w1[i] * w2[j])
+
+        smem[cuda.threadIdx.x] = g
 
         cuda.syncthreads()
 
