@@ -113,7 +113,7 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
             if cuda.threadIdx.x < i:
                 smem[cuda.threadIdx.x] += smem[cuda.threadIdx.x + i]
             cuda.syncthreads()
-            i = i // 2
+            i = i >> 1
 
         # and now magic...
         if cuda.threadIdx.x < 32:
