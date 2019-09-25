@@ -23,7 +23,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2):
     if func is None:
         raise ImportError('could not import %s' % func_str)
 
-    print('func_str:', func_str)
+    print('\nfunc_str:', func_str)
     print('func:', func)
     print('npoints:', npoints)
     if 'cuda' in func_str:
@@ -241,7 +241,6 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2):
         runtime = (end-start)/3
 
     print('time:', runtime)
-    print('\n')
 
 
 if __name__ == '__main__':
