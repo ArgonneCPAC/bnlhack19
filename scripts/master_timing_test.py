@@ -7,7 +7,6 @@ from chopperhack19.mock_obs.tests.generate_test_data import (
     DEFAULT_RBINS_SQUARED, DEFAULT_NMESH)
 from time import time
 
-
 @click.command()
 @click.option('--func', default='count_weighted_pairs_3d_cpu_serial',
               help='the function to run')
@@ -49,7 +48,8 @@ def _main(func, blocks, threads, npoints):
             DEFAULT_RBINS_SQUARED, result,
             _ndiv, _cell_id_indices, _cell_id2_indices,
             _num_cell2_steps)
-    elif 'double_chop' in func_str:
+    elif 'double_chop' in func_str: 
+        from chopperhack19.mock_obs import chaining_mesh as cm
         nx1 = DEFAULT_NMESH
         ny1 = DEFAULT_NMESH
         nz1 = DEFAULT_NMESH
@@ -63,7 +63,7 @@ def _main(func, blocks, threads, npoints):
         yperiod = Lbox
         zperiod = Lbox
         x1out, y1out, z1out, w1out, cell1out, x2out, y2out, z2out, w2out, indx2 = (
-            get_double_chopped_data(x1, y1, z1, w1, x2, y2, z2, w2, nx1, ny1, nz1, nx2, ny2, nz2,
+            cm.get_double_chopped_data(x1, y1, z1, w1, x2, y2, z2, w2, nx1, ny1, nz1, nx2, ny2, nz2,
                                     rmax_x, rmax_y, rmax_z, xperiod, yperiod, zperiod))
         func[blocks, threads](
             x1out, y1out, z1out, w1out, cell1out, x2out, y2out, z2out, w2out, indx2,
@@ -145,7 +145,7 @@ def _main(func, blocks, threads, npoints):
         yperiod = Lbox
         zperiod = Lbox
         x1out, y1out, z1out, w1out, cell1out, x2out, y2out, z2out, w2out, indx2 = (
-            get_double_chopped_data(x1, y1, z1, w1, x2, y2, z2, w2, nx1, ny1, nz1, nx2, ny2, nz2,
+            cm.get_double_chopped_data(x1, y1, z1, w1, x2, y2, z2, w2, nx1, ny1, nz1, nx2, ny2, nz2,
                                     rmax_x, rmax_y, rmax_z, xperiod, yperiod, zperiod))
         d_x1 = cuda.to_device(x1out.astype(np.float32))
         d_y1 = cuda.to_device(y1out.astype(np.float32))
