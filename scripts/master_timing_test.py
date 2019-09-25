@@ -108,10 +108,10 @@ def _main(func, blocks, threads, npoints):
         d_z1 = cuda.to_device(z1out.astype(np.float32))
         d_w1 = cuda.to_device(w1out.astype(np.float32))
 
-        d_x2 = cuda.to_device(x2.astype(np.float32))
-        d_y2 = cuda.to_device(y2.astype(np.float32))
-        d_z2 = cuda.to_device(z2.astype(np.float32))
-        d_w2 = cuda.to_device(w2.astype(np.float32))
+        d_x2 = cuda.to_device(x2out.astype(np.float32))
+        d_y2 = cuda.to_device(y2out.astype(np.float32))
+        d_z2 = cuda.to_device(z2out.astype(np.float32))
+        d_w2 = cuda.to_device(w2out.astype(np.float32))
 
         d_rbins_squared = cuda.to_device(
             DEFAULT_RBINS_SQUARED.astype(np.float32))
@@ -155,6 +155,7 @@ def _main(func, blocks, threads, npoints):
         d_x2 = cuda.to_device(x2out.astype(np.float32))
         d_y2 = cuda.to_device(y2out.astype(np.float32))
         d_z2 = cuda.to_device(z2out.astype(np.float32))
+        d_w2 = cuda.to_device(w2out.astype(np.float32))
         d_indx2 = cuda.to_device(indx2.astype(np.int32))
         d_rbins_squared = cuda.to_device(
             DEFAULT_RBINS_SQUARED.astype(np.float32))
