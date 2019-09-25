@@ -71,8 +71,9 @@ def count_weighted_pairs_3d_cuda_smem_noncuml(
             cuda.atomic.add(result, k, smem[k])
 
 
-_count_weighted_pairs_3d_cuda_revchop_noncuml = exec(jinja2.Template("""
-def _count_weighted_pairs_3d_cuda_revchop_noncuml(
+exec(jinja2.Template("""
+@cuda.jit(fastmath=True)
+def count_weighted_pairs_3d_cuda_revchop_noncuml(
         x1, y1, z1, w1, x2, y2, z2, w2, _rbins_squared, result):
     start = cuda.grid(1)
     stride = cuda.gridsize(1)
@@ -131,9 +132,6 @@ def _count_weighted_pairs_3d_cuda_revchop_noncuml(
         if cuda.threadIdx.x == 0:
             cuda.atomic.add(result, k, smem[0])
 """).render())
-
-count_weighted_pairs_3d_cuda_revchop_noncuml = cuda.jit(
-    fastmath=True)(_count_weighted_pairs_3d_cuda_revchop_noncuml)
 
 
 @cuda.jit(fastmath=True)
