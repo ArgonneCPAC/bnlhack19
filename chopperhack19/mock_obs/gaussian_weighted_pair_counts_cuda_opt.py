@@ -87,7 +87,7 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
 
     smem = cuda.shared.array(512, numba.float32)
 
-    {% for bin in range(16) %}
+    {% for bin in range({{ n_bins }}) %}
     g{{ bin }} = 0
     {% endfor %}
     for i in range(start, n1, stride):
@@ -105,10 +105,10 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
                 g{{ bin }} += (w1[i] * w2[j])
             {% endfor %}
 
-    for k in range(nbins):
+    for k in range({{ n_bins }}):
         if k == 0:
             smem[cuda.threadIdx.x] = g0
-        {% for bin in range(1, 16) %}
+        {% for bin in range(1, {{ n_bins }}) %}
         elif k == {{ bin }}:
             smem[cuda.threadIdx.x] = g{{ bin }}
         {% endfor %}
@@ -131,7 +131,7 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
 
         if cuda.threadIdx.x == 0:
             cuda.atomic.add(result, k, smem[0])
-""").render())
+""").render(n_bins=2))
 
 
 @cuda.jit(fastmath=True)
