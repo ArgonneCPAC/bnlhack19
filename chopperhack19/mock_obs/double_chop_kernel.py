@@ -54,7 +54,7 @@ def double_chop_pairs_cuda_shmem_transpose(
     start = cuda.grid(1)
     stride = cuda.gridsize(1)
 
-    n1 = x1.shape[0]
+    n1 = pt1.shape[0]
     nbins = rbins_squared.shape[0]
 
     for i in range(start, n1, stride):

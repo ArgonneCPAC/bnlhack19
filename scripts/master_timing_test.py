@@ -48,6 +48,37 @@ def _main(func, blocks, threads, npoints):
             DEFAULT_RBINS_SQUARED, result,
             _ndiv, _cell_id_indices, _cell_id2_indices,
             _num_cell2_steps)
+    elif 'double_chop' in func_str and 'cuda' in func_str and 'transpose' in func_str:
+        from chopperhack19.mock_obs import chaining_mesh as cm
+        nx1 = DEFAULT_NMESH1
+        ny1 = DEFAULT_NMESH1
+        nz1 = DEFAULT_NMESH1
+        nx2 = DEFAULT_NMESH2
+        ny2 = DEFAULT_NMESH2
+        nz2 = DEFAULT_NMESH2
+        rmax_x = np.sqrt(DEFAULT_RBINS_SQUARED[-1])
+        rmax_y = rmax_x
+        rmax_z = rmax_y
+        xperiod = Lbox
+        yperiod = Lbox
+        zperiod = Lbox
+        x1out, y1out, z1out, w1out, cell1out, x2out, y2out, z2out, w2out, indx2 = (
+            cm.get_double_chopped_data(_x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2, nx1, ny1, nz1, nx2, ny2, nz2,
+                                    rmax_x, rmax_y, rmax_z, xperiod, yperiod, zperiod))
+
+        ptswts1 = np.empty((x1out.size, 4), dtype=np.float32)
+        ptswts1[:, 0] = x1out
+        ptswts1[:, 1] = y1out
+        ptswts1[:, 2] = z1out
+        ptswts1[:, 3] = w1out
+        ptswts2 = np.empty((x2out.size, 4), dtype=np.float32)
+        ptswts2[:, 0] = x2out
+        ptswts2[:, 1] = y2out
+        ptswts2[:, 2] = z2out
+        ptswts2[:, 3] = w2out
+
+        func[blocks, threads](
+            ptswts1, cell1out, ptswts2, indx2, DEFAULT_RBINS_SQUARED, result)
     elif 'double_chop' in func_str: 
         from chopperhack19.mock_obs import chaining_mesh as cm
         nx1 = DEFAULT_NMESH1
@@ -131,6 +162,52 @@ def _main(func, blocks, threads, npoints):
         end = time()
         assert np.all(np.isfinite(results_host))
         runtime = (end-start)/3
+    elif 'double_chop' in func_str and 'cuda' in func_str and 'transpose' in func_str:
+        nx1 = DEFAULT_NMESH1
+        ny1 = DEFAULT_NMESH1
+        nz1 = DEFAULT_NMESH1
+        nx2 = DEFAULT_NMESH2
+        ny2 = DEFAULT_NMESH2
+        nz2 = DEFAULT_NMESH2
+        rmax_x = np.sqrt(DEFAULT_RBINS_SQUARED[-1])
+        rmax_y = rmax_x
+        rmax_z = rmax_y
+        xperiod = Lbox
+        yperiod = Lbox
+        zperiod = Lbox
+        x1out, y1out, z1out, w1out, cell1out, x2out, y2out, z2out, w2out, indx2 = (
+            cm.get_double_chopped_data(x1, y1, z1, w1, x2, y2, z2, w2, nx1, ny1, nz1, nx2, ny2, nz2,
+                                    rmax_x, rmax_y, rmax_z, xperiod, yperiod, zperiod))
+
+        ptswts1 = np.empty((x1out.size, 4), dtype=np.float32)
+        ptswts1[:, 0] = x1out
+        ptswts1[:, 1] = y1out
+        ptswts1[:, 2] = z1out
+        ptswts1[:, 3] = w1out
+        ptswts2 = np.empty((x2out.size, 4), dtype=np.float32)
+        ptswts2[:, 0] = x2out
+        ptswts2[:, 1] = y2out
+        ptswts2[:, 2] = z2out
+        ptswts2[:, 3] = w2out
+
+        d_ptswts1 = cuda.to_device(ptswts1)
+        d_ptswts2 = cuda.to_device(ptswts2)
+        d_cell1out = cuda.to_device(cell1out.astype(np.int32))
+        d_indx2 = cuda.to_device(indx2.astype(np.int32))
+
+        d_rbins_squared = cuda.to_device(
+            DEFAULT_RBINS_SQUARED.astype(np.float32))
+        d_result = cuda.device_array_like(result)
+
+        start = time()
+        for _ in range(3):
+            func[blocks, threads](
+                d_ptswts1, d_cell1out, d_ptswts2, d_indx2, d_rbins_squared, d_result)
+            results_host = d_result.copy_to_host()
+        end = time()
+        assert np.all(np.isfinite(results_host))
+        runtime = (end-start)/3
+
     elif 'double_chop' in func_str:
         nx1 = DEFAULT_NMESH1
         ny1 = DEFAULT_NMESH1
