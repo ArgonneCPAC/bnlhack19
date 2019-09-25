@@ -4,7 +4,7 @@ import click
 import chopperhack19.mock_obs
 from chopperhack19.mock_obs.tests import random_weighted_points
 from chopperhack19.mock_obs.tests.generate_test_data import (
-    DEFAULT_RBINS_SQUARED, DEFAULT_NMESH)
+    DEFAULT_RBINS_SQUARED, DEFAULT_NMESH1)
 from time import time
 
 @click.command()
@@ -41,7 +41,7 @@ def _main(func, blocks, threads, npoints):
     if 'cuda_mesh' in func_str:
         _cell_id_indices = np.zeros(len(_x1))
         _cell_id2_indices = np.zeros(len(_x1))
-        _ndiv = np.array([DEFAULT_NMESH]*3, dtype=np.int32)
+        _ndiv = np.array([DEFAULT_NMESH1]*3, dtype=np.int32)
         _num_cell2_steps = np.array([1]*3, dtype=np.int32)
         func[blocks, threads](
             _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
@@ -50,12 +50,12 @@ def _main(func, blocks, threads, npoints):
             _num_cell2_steps)
     elif 'double_chop' in func_str: 
         from chopperhack19.mock_obs import chaining_mesh as cm
-        nx1 = DEFAULT_NMESH
-        ny1 = DEFAULT_NMESH
-        nz1 = DEFAULT_NMESH
-        nx2 = nx1
-        ny2 = ny1
-        nz2 = nz1
+        nx1 = DEFAULT_NMESH1
+        ny1 = DEFAULT_NMESH1
+        nz1 = DEFAULT_NMESH1
+        nx2 = DEFAULT_NMESH2
+        ny2 = DEFAULT_NMESH2
+        nz2 = DEFAULT_NMESH2
         rmax_x = np.sqrt(DEFAULT_RBINS_SQUARED[-1])
         rmax_y = rmax_x
         rmax_z = rmax_y
@@ -91,9 +91,9 @@ def _main(func, blocks, threads, npoints):
     x2, y2, z2, w2 = random_weighted_points(n2, Lbox, 1)
     if 'cuda_mesh' in func_str:
         from chopperhack19.mock_obs import chaining_mesh as cm
-        nx = DEFAULT_NMESH
-        ny = DEFAULT_NMESH
-        nz = DEFAULT_NMESH
+        nx = DEFAULT_NMESH1
+        ny = DEFAULT_NMESH1
+        nz = DEFAULT_NMESH1
         results = cm.calculate_chaining_mesh(
             x1, y1, z1, w1, Lbox, Lbox, Lbox, nx, ny, nz)
         (x1out, y1out, z1out, w1out, ixout, iyout, izout,
@@ -116,7 +116,7 @@ def _main(func, blocks, threads, npoints):
         d_rbins_squared = cuda.to_device(
             DEFAULT_RBINS_SQUARED.astype(np.float32))
         d_result = cuda.device_array_like(result)
-        d_ndiv = cuda.to_device(np.array([DEFAULT_NMESH]*3, dtype=np.int32))
+        d_ndiv = cuda.to_device(np.array([DEFAULT_NMESH1]*3, dtype=np.int32))
         d_cell_id_indices = cuda.to_device(cell_id_indices)
         d_cell_id2_indices = cuda.to_device(cell_id2_indices)
         d_num_cell2_steps = cuda.to_device(np.array([1]*3, dtype=np.int32))
@@ -132,12 +132,12 @@ def _main(func, blocks, threads, npoints):
         assert np.all(np.isfinite(results_host))
         runtime = (end-start)/3
     elif 'double_chop' in func_str:
-        nx1 = DEFAULT_NMESH
-        ny1 = DEFAULT_NMESH
-        nz1 = DEFAULT_NMESH
-        nx2 = nx1
-        ny2 = ny1
-        nz2 = nz1
+        nx1 = DEFAULT_NMESH1
+        ny1 = DEFAULT_NMESH1
+        nz1 = DEFAULT_NMESH1
+        nx2 = DEFAULT_NMESH2
+        ny2 = DEFAULT_NMESH2
+        nz2 = DEFAULT_NMESH2
         rmax_x = np.sqrt(DEFAULT_RBINS_SQUARED[-1])
         rmax_y = rmax_x
         rmax_z = rmax_y
