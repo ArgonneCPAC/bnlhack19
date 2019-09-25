@@ -25,7 +25,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2):
 
     print('func_str:', func_str)
     print('func:', func)
-
+    print('npoints:', npoints)
     if 'cuda' in func_str:
         from numba import cuda
 
