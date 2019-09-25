@@ -1,6 +1,7 @@
 import numba
 from numba import cuda
 import math
+import jinja2
 
 __all__ = (
     'count_weighted_pairs_3d_cuda_smem_noncuml',
@@ -70,6 +71,7 @@ def count_weighted_pairs_3d_cuda_smem_noncuml(
             cuda.atomic.add(result, k, smem[k])
 
 
+_count_weighted_pairs_3d_cuda_revchop_noncuml = eval(jinja2.Template("""
 def _count_weighted_pairs_3d_cuda_revchop_noncuml(
         x1, y1, z1, w1, x2, y2, z2, w2, _rbins_squared, result):
     start = cuda.grid(1)
@@ -84,8 +86,9 @@ def _count_weighted_pairs_3d_cuda_revchop_noncuml(
 
     smem = cuda.shared.array(512, numba.float32)
 
-    g0 = 0
-    g1 = 0
+    {% for bin in range(64) %}
+    g{{ bin }} = 0
+    {% endfor %}
     for i in range(start, n1, stride):
         for j in range(n2):
             dx = x1[i] - x2[j]
@@ -94,16 +97,20 @@ def _count_weighted_pairs_3d_cuda_revchop_noncuml(
             dsq = cuda.fma(dx, dx, cuda.fma(dy, dy, dz * dz))
 
             k = int((math.log(dsq)/2 - logminr) / dlogr)
-            if k == nbins-1:
+            if k == 0:
                 g0 += (w1[i] * w2[j])
-            elif k == nbins-2:
-                g1 += (w1[i] * w2[j])
+            {% for bin in range(1, 64) %}
+            elif k == {{ bin }}:
+                g{{ bin }} += (w1[i] * w2[j])
+            {% endfor %}
 
-    for k in range(nbins-1, nbins-3, -1):
-        if k == nbins-1:
+    for k in range(nbins):
+        if k == 0:
             smem[cuda.threadIdx.x] = g0
-        elif k == nbins-2:
-            smem[cuda.threadIdx.x] = g1
+        {% for bin in range(1, 64) %}
+        elif k == {{ bin }}:
+            smem[cuda.threadIdx.x] = g{{ bin }}
+        {% endfor %}
         cuda.syncthreads()
 
         i = numba.int32(cuda.blockDim.x) // 2
@@ -123,7 +130,7 @@ def _count_weighted_pairs_3d_cuda_revchop_noncuml(
 
         if cuda.threadIdx.x == 0:
             cuda.atomic.add(result, k, smem[0])
-
+""").render())
 
 count_weighted_pairs_3d_cuda_revchop_noncuml = cuda.jit(
     _count_weighted_pairs_3d_cuda_revchop_noncuml,
