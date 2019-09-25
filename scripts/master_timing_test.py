@@ -49,6 +49,25 @@ def _main(func, blocks, threads, npoints):
             DEFAULT_RBINS_SQUARED, result,
             _ndiv, _cell_id_indices, _cell_id2_indices,
             _num_cell2_steps)
+    elif 'double_chop' in func_str:
+        nx1 = DEFAULT_NMESH
+        ny1 = DEFAULT_NMESH
+        nz1 = DEFAULT_NMESH
+        nx2 = nx1
+        ny2 = ny1
+        nz2 = nz1
+        rmax_x = DEFAULT_RBINS_SQUARED[-1]
+        rmax_y = rmax_x
+        rmax_z = rmax_y
+        xperiod = Lbox
+        yperiod = Lbox
+        zperiod = Lbox
+        x1out, y1out, z1out, w1out, cell1out, x2out, y2out, z2out, w2out, indx2 = (
+            get_double_chopped_data(x1, y1, z1, w1, x2, y2, z2, w2, nx1, ny1, nz1, nx2, ny2, nz2,
+                                    rmax_x, rmax_y, rmax_z, xperiod, yperiod, zperiod))
+        func[blocks, threads](
+            x1out, y1out, z1out, w1out, cell1out, x2out, y2out, z2out, w2out, indx2,
+            DEFAULT_RBINS_SQUARED, result)
     elif 'cuda' in func_str and 'transpose' not in func_str:
         func[blocks, threads](
             _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
@@ -112,6 +131,42 @@ def _main(func, blocks, threads, npoints):
         end = time()
         assert np.all(np.isfinite(results_host))
         runtime = (end-start)/3
+    elif 'double_chop' in func_str:
+        nx1 = DEFAULT_NMESH
+        ny1 = DEFAULT_NMESH
+        nz1 = DEFAULT_NMESH
+        nx2 = nx1
+        ny2 = ny1
+        nz2 = nz1
+        rmax_x = DEFAULT_RBINS_SQUARED[-1]
+        rmax_y = rmax_x
+        rmax_z = rmax_y
+        xperiod = Lbox
+        yperiod = Lbox
+        zperiod = Lbox
+        x1out, y1out, z1out, w1out, cell1out, x2out, y2out, z2out, w2out, indx2 = (
+            get_double_chopped_data(x1, y1, z1, w1, x2, y2, z2, w2, nx1, ny1, nz1, nx2, ny2, nz2,
+                                    rmax_x, rmax_y, rmax_z, xperiod, yperiod, zperiod))
+        d_x1 = cuda.to_device(x1out.astype(np.float32))
+        d_y1 = cuda.to_device(y1out.astype(np.float32))
+        d_z1 = cuda.to_device(z1out.astype(np.float32))
+        d_w1 = cuda.to_device(w1out.astype(np.float32))
+        d_cell1out = cuda.to_device(cell1out.astype(np.int32))
+        d_x2 = cuda.to_device(x2out.astype(np.float32))
+        d_y2 = cuda.to_device(y2out.astype(np.float32))
+        d_z2 = cuda.to_device(z2out.astype(np.float32))
+        d_indx2 = cuda.to_device(indx2.astype(np.int32))
+        d_rbins_squared = cuda.to_device(
+            DEFAULT_RBINS_SQUARED.astype(np.float32))
+        d_result = cuda.device_array_like(result)
+        start = time()
+        for _ in range(3):
+            func[blocks, threads](
+                d_x1, d_y1, d_z1, d_w1, d_cell1out, 
+                d_x2, d_y2, d_z2, d_w2, d_indx2,
+                d_rbins_squared, d_result)
+            results_host = d_result.copy_to_host()
+        end = time()
     elif 'cuda' in func_str and 'transpose' not in func_str:
         d_x1 = cuda.to_device(x1.astype(np.float32))
         d_y1 = cuda.to_device(y1.astype(np.float32))
