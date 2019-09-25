@@ -43,3 +43,39 @@ def double_chop_pairs_cuda(
                 k = k-1
                 if k <= 0:
                     break
+
+
+@cuda.jit
+def double_chop_pairs_cuda_shmem_transpose(
+        pt1, cell1, pt2, indx2, rbins_squared, result):
+    """Naively count Npairs(<r), the total number of pairs that are separated
+    by a distance less than r, for each r**2 in the input rbins_squared.
+    """
+    start = cuda.grid(1)
+    stride = cuda.gridsize(1)
+
+    n1 = x1.shape[0]
+    nbins = rbins_squared.shape[0]
+
+    for i in range(start, n1, stride):
+        px, py, pz, pw = pt1[i]
+
+        cell1_i = cell1[i]
+        first = indx2[cell1_i]
+        last = indx2[cell1_i+1]
+
+        for j in range(first, last):
+            qx, qy, qz, qw = pt2[j]
+
+            dx = px-qx
+            dy = py-qy
+            dz = pz-qz
+            wprod = pw*qw
+            dsq = dx*dx + dy*dy + dz*dz
+
+            k = nbins-1
+            while dsq <= rbins_squared[k]:
+                cuda.atomic.add(result, k-1, wprod)
+                k = k-1
+                if k <= 0:
+                    break
