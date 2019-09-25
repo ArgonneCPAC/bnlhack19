@@ -1,6 +1,6 @@
 """
 """
-from numba import cuda
+from numba import cuda, int32, float32
 
 
 @cuda.jit
@@ -57,6 +57,9 @@ def double_chop_pairs_cuda_shmem_transpose(
     n1 = pt1.shape[0]
     nbins = rbins_squared.shape[0]
 
+    chunkSIZE = 512  # hard-coded to be the same as block size
+    local_buffer = cuda.shared.array((chunkSIZE, 4), float32)
+
     for i in range(start, n1, stride):
         px, py, pz, pw = pt1[i]
 
@@ -64,18 +67,29 @@ def double_chop_pairs_cuda_shmem_transpose(
         first = indx2[cell1_i]
         last = indx2[cell1_i+1]
 
-        for j in range(first, last):
-            qx, qy, qz, qw = pt2[j]
+        n_chunks = (last - first + chunkSIZE - 1) // chunkSIZE
 
-            dx = px-qx
-            dy = py-qy
-            dz = pz-qz
-            wprod = pw*qw
-            dsq = dx*dx + dy*dy + dz*dz
+        for i_chunk in range(n_chunks):
+            if cuda.threadIdx.x < chunkSIZE:
+                j = i_chunk * chunkSIZE + cuda.threadIdx.x
+                local_buffer[cuda.threadIdx.x, 0] = pt2[j, 0]
+                local_buffer[cuda.threadIdx.x, 1] = pt2[j, 1]
+                local_buffer[cuda.threadIdx.x, 2] = pt2[j, 2]
+                local_buffer[cuda.threadIdx.x, 3] = pt2[j, 3]
+            cuda.syncthreads()
 
-            k = nbins-1
-            while dsq <= rbins_squared[k]:
-                cuda.atomic.add(result, k-1, wprod)
-                k = k-1
-                if k <= 0:
-                    break
+            for q in range(chunkSIZE):
+                qx, qy, qz, qw = local_buffer[q]
+
+                dx = px-qx
+                dy = py-qy
+                dz = pz-qz
+                wprod = pw*qw
+                dsq = dx*dx + dy*dy + dz*dz
+
+                k = nbins-1
+                while dsq <= rbins_squared[k]:
+                    cuda.atomic.add(result, k-1, wprod)
+                    k = k-1
+                    if k <= 0:
+                        break
