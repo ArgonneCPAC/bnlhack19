@@ -133,8 +133,7 @@ def _count_weighted_pairs_3d_cuda_revchop_noncuml(
 """).render())
 
 count_weighted_pairs_3d_cuda_revchop_noncuml = cuda.jit(
-    _count_weighted_pairs_3d_cuda_revchop_noncuml,
-    fastmath=True)
+    fastmath=True)(_count_weighted_pairs_3d_cuda_revchop_noncuml)
 
 
 @cuda.jit(fastmath=True)
