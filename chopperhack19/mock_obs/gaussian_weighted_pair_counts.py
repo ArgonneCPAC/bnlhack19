@@ -235,6 +235,7 @@ def count_weighted_pairs_3d_cpu_noncuml_pairsonly(
     return result
 
 
+@njit()
 def count_weighted_pairs_3d_cpu_test_for_max(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
 
