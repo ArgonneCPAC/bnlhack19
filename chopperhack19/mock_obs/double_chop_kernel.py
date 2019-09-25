@@ -15,6 +15,7 @@ def double_chop_pairs_cuda(
     n1 = x1.shape[0]
     nbins = rbins_squared.shape[0]
 
+    g = 0
     for i in range(start, n1, stride):
         px = x1[i]
         py = y1[i]
@@ -39,7 +40,9 @@ def double_chop_pairs_cuda(
 
             k = nbins-1
             while dsq <= rbins_squared[k]:
-                cuda.atomic.add(result, k-1, wprod)
+                #cuda.atomic.add(result, k-1, wprod)
+                g += wprod
                 k = k-1
                 if k <= 0:
                     break
+    result[0] += g
