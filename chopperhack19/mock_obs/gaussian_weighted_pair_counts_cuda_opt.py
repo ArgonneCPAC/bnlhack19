@@ -127,8 +127,6 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
         if cuda.threadIdx.x == 0:
             cuda.atomic.add(result, k, smem[0])
 
-        cuda.syncthreads()
-
 
 @cuda.jit(fastmath=True)
 def count_weighted_pairs_3d_cuda_transpose_noncuml(
