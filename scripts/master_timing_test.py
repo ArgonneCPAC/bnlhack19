@@ -142,6 +142,7 @@ def _main(func, blocks, threads, npoints):
                 d_rbins_squared, d_result)
             results_host = d_result.copy_to_host()
         end = time()
+        print(results_host)
         assert np.all(np.isfinite(results_host))
         runtime = (end-start)/3
 
