@@ -92,6 +92,9 @@ def get_double_chopped_sample2(x1, y1, z1, w1, x2, y2, z2, w2, nx1, ny1, nz1, nx
         Float arrays of shape (npts1, ) storing xyz positions and weights of points in sample 1
         after sorting by chaining mesh ID
 
+    cell1_indices : integer ndarray of shape (nx1 * ny1 * nz1, ) storing the indices
+        of new cells in sample1
+
     x2out, y2out, z2out, w2out : ndarrays
         Float arrays of shape (n2out, ) storing xyz positions and weights of points in sample 2
         after copying the data required by the double-chop, so that n2out > npts2
@@ -105,7 +108,7 @@ def get_double_chopped_sample2(x1, y1, z1, w1, x2, y2, z2, w2, nx1, ny1, nz1, nx
     mesh1 = calculate_chaining_mesh(x1, y1, z1, w1, xperiod, yperiod, zperiod, nx1, ny1, nz1)
     mesh2 = calculate_chaining_mesh(x2, y2, z2, w2, xperiod, yperiod, zperiod, nx2, ny2, nz2)
 
-    x1out, y1out, z1out, w1out, __, __, __, cell1_ids, __, __ = mesh1
+    x1out, y1out, z1out, w1out, __, __, __, cell1_ids, __, cell1_indices = mesh1
     x2, y2, z2, w2, __, __, __, cell2_ids, __, __ = mesh2
 
     dx1 = xperiod / nx1
@@ -121,7 +124,7 @@ def get_double_chopped_sample2(x1, y1, z1, w1, x2, y2, z2, w2, nx1, ny1, nz1, nx
 
     x2out, y2out, z2out, w2out, indx2 = result
 
-    return x1out, y1out, z1out, w1out, x2out, y2out, z2out, w2out, indx2
+    return x1out, y1out, z1out, w1out, cell1_indices, x2out, y2out, z2out, w2out, indx2
 
 
 def _low_index_cell2(s1_low, rmax, ds2):
