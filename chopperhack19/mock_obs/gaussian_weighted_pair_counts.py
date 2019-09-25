@@ -11,7 +11,8 @@ __all__ = (
     'count_weighted_pairs_3d_cuda_mesh',
     'count_weighted_pairs_3d_cpu_corrfunc',
     'count_weighted_pairs_3d_cpu_mp',
-    'count_weighted_pairs_3d_cpu')
+    'count_weighted_pairs_3d_cpu',
+    'count_weighted_pairs_3d_cpu_noncuml_pairsonly')
 
 
 @cuda.jit
