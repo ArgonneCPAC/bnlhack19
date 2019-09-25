@@ -92,23 +92,20 @@ def get_double_chopped_data(x1, y1, z1, w1, x2, y2, z2, w2, nx1, ny1, nz1, nx2, 
         Float arrays of shape (npts1, ) storing xyz positions and weights of points in sample 1
         after sorting by chaining mesh ID
 
-    cell1_indices : integer ndarray of shape (nx1 * ny1 * nz1, ) storing the indices
-        of new cells in sample1
+    cell1out : integer ndarray of shape (npts1, ) storing the cell number of points in sample 1
 
     x2out, y2out, z2out, w2out : ndarrays
         Float arrays of shape (n2out, ) storing xyz positions and weights of points in sample 2
         after copying the data required by the double-chop, so that n2out > npts2
 
-    indx2 : list of length nx1*ny1*nz1
-        Each element is a 2-element tuple storing (ifirst_cell1, ilast_cell1) such that
-        x2out[ifirst_cell1:ilast_cell1] stores all points in the x-dimension
-        that are located within the +/- rmax_x of the sample 1 points
-        in the corresponding cell, and likewise for y2out, z2out, w2out
+    indx2 : integer ndarray of shape (nx1*ny1*nz1 + 1, )
+        For cell1 = i, indx2[i] stores the first index of the relevant sample 2 points
+        The first element is 0, the last element is n2out
     """
     mesh1 = calculate_chaining_mesh(x1, y1, z1, w1, xperiod, yperiod, zperiod, nx1, ny1, nz1)
     mesh2 = calculate_chaining_mesh(x2, y2, z2, w2, xperiod, yperiod, zperiod, nx2, ny2, nz2)
 
-    x1out, y1out, z1out, w1out, __, __, __, cell1_ids, __, cell1_indices = mesh1
+    x1out, y1out, z1out, w1out, __, __, __, cell1out, __, cell1_indices = mesh1
     x2, y2, z2, w2, __, __, __, cell2_ids, __, __ = mesh2
 
     dx1 = xperiod / nx1
@@ -124,7 +121,7 @@ def get_double_chopped_data(x1, y1, z1, w1, x2, y2, z2, w2, nx1, ny1, nz1, nx2, 
 
     x2out, y2out, z2out, w2out, indx2 = result
 
-    return x1out, y1out, z1out, w1out, cell1_indices, x2out, y2out, z2out, w2out, indx2
+    return x1out, y1out, z1out, w1out, cell1out, x2out, y2out, z2out, w2out, indx2
 
 
 def _low_index_cell2(s1_low, rmax, ds2):
@@ -194,8 +191,8 @@ def _get_double_chopped_sample2(nx1, ny1, nz1, dx1, dy1, dz1, rmax_x, rmax_y, rm
     y2_collector = []
     z2_collector = []
     w2_collector = []
-    indx_collector = []
 
+    indx_collector = [0, ]
     ifirst = 0
     for icell1 in range(ncells1):
         ix1, iy1, iz1 = np.unravel_index(icell1, (nx1, ny1, nz1) )
@@ -210,7 +207,7 @@ def _get_double_chopped_sample2(nx1, ny1, nz1, dx1, dy1, dz1, rmax_x, rmax_y, rm
         w2_collector.append(w2[sample2_mask])
 
         ilast = ifirst + np.count_nonzero(sample2_mask)
-        indx_collector.append((ifirst, ilast))
+        indx_collector.append(ilast)
         ifirst = ilast
 
     x2out = np.concatenate(x2_collector)
@@ -218,4 +215,4 @@ def _get_double_chopped_sample2(nx1, ny1, nz1, dx1, dy1, dz1, rmax_x, rmax_y, rm
     z2out = np.concatenate(z2_collector)
     w2out = np.concatenate(w2_collector)
 
-    return x2out, y2out, z2out, w2out, indx_collector
+    return x2out, y2out, z2out, w2out, np.array(indx_collector, dtype='i4')
