@@ -4,7 +4,7 @@ import click
 import chopperhack19.mock_obs
 from chopperhack19.mock_obs.tests import random_weighted_points
 from chopperhack19.mock_obs.tests.generate_test_data import (
-    DEFAULT_RBINS_SQUARED, nmesh1, nmesh2)
+    DEFAULT_RBINS_SQUARED)
 from time import time
 
 @click.command()
