@@ -63,7 +63,7 @@ def calculate_chaining_mesh(x, y, z, w, subvol_xlength, subvol_ylength, subvol_z
     return xout, yout, zout, wout, ixout, iyout, izout, cell_id_out, idx_sorted, cell_id_indices
 
 
-def get_double_chopped_sample2(x1, y1, z1, w1, x2, y2, z2, w2, nx1, ny1, nz1, nx2, ny2, nz2,
+def get_double_chopped_data(x1, y1, z1, w1, x2, y2, z2, w2, nx1, ny1, nz1, nx2, ny2, nz2,
             rmax_x, rmax_y, rmax_z, xperiod, yperiod, zperiod):
     """
     Parameters
