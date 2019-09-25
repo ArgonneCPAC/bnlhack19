@@ -70,8 +70,7 @@ def count_weighted_pairs_3d_cuda_smem_noncuml(
             cuda.atomic.add(result, k, smem[k])
 
 
-@cuda.jit(fastmath=True)
-def count_weighted_pairs_3d_cuda_revchop_noncuml(
+def _count_weighted_pairs_3d_cuda_revchop_noncuml(
         x1, y1, z1, w1, x2, y2, z2, w2, _rbins_squared, result):
     start = cuda.grid(1)
     stride = cuda.gridsize(1)
@@ -84,8 +83,9 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
     logminr = math.log(_rbins_squared[0]) / 2
 
     smem = cuda.shared.array(512, numba.float32)
-    lmem = cuda.local.array(128, numba.float32)
 
+    g0 = 0
+    g1 = 1
     for i in range(start, n1, stride):
         for j in range(n2):
             dx = x1[i] - x2[j]
@@ -94,19 +94,16 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
             dsq = cuda.fma(dx, dx, cuda.fma(dy, dy, dz * dz))
 
             k = int((math.log(dsq)/2 - logminr) / dlogr)
-            if k >= 0 and k < nbins:
-                lmem[k] += (w1[i] * w2[j])
-            # if k == nbins-1:
-            #     g0 += (w1[i] * w2[j])
-            # elif k == nbins-2:
-            #     g1 += (w1[i] * w2[j])
+            if k == nbins-1:
+                g0 += (w1[i] * w2[j])
+            elif k == nbins-2:
+                g1 += (w1[i] * w2[j])
 
     for k in range(nbins-1, nbins-3, -1):
-        # if k == nbins-1:
-        #     smem[cuda.threadIdx.x] = g0
-        # elif k == nbins-2:
-        #     smem[cuda.threadIdx.x] = g1
-        smem[cuda.threadIdx.x] = lmem[k]
+        if k == nbins-1:
+            smem[cuda.threadIdx.x] = g0
+        elif k == nbins-2:
+            smem[cuda.threadIdx.x] = g1
         cuda.syncthreads()
 
         i = numba.int32(cuda.blockDim.x) // 2
@@ -118,6 +115,11 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
 
         if cuda.threadIdx.x == 0:
             cuda.atomic.add(result, k, smem[0])
+
+
+count_weighted_pairs_3d_cuda_revchop_noncuml = cuda.jit(
+    _count_weighted_pairs_3d_cuda_revchop_noncuml,
+    fastmath=True)
 
 
 @cuda.jit(fastmath=True)
