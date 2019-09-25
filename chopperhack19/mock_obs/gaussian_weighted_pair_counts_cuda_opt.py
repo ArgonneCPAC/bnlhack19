@@ -1,7 +1,7 @@
 import numba
 from numba import cuda
 import math
-import jinja2
+# import jinja2
 
 __all__ = (  # noqa
     'count_weighted_pairs_3d_cuda_smem_noncuml',
@@ -211,9 +211,9 @@ def count_weighted_pairs_3d_cuda_smem_noncuml(
             cuda.atomic.add(result, k, smem[k])
 
 
-#exec(jinja2.Template("""
-#@cuda.jit(fastmath=True)
-#def count_weighted_pairs_3d_cuda_revchop_noncuml(
+# exec(jinja2.Template("""
+# @cuda.jit(fastmath=True)
+# def count_weighted_pairs_3d_cuda_revchop_noncuml(
 #        x1, y1, z1, w1, x2, y2, z2, w2, _rbins_squared, result):
 #    start = cuda.grid(1)
 #    stride = cuda.gridsize(1)
@@ -271,8 +271,8 @@ def count_weighted_pairs_3d_cuda_smem_noncuml(
 #
 #        if cuda.threadIdx.x == 0:
 #            cuda.atomic.add(result, k, smem[0])
-#""").render(n_bins=2))
-#
+# """).render(n_bins=2))
+
 
 @cuda.jit(fastmath=True)
 def count_weighted_pairs_3d_cuda_transpose_noncuml(

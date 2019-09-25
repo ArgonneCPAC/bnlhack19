@@ -1,6 +1,6 @@
 """
 """
-from numba import cuda, int32, float32
+from numba import cuda, float32
 
 
 @cuda.jit
@@ -73,11 +73,10 @@ def double_chop_pairs_cuda_shmem_transpose(
         # The first n_chunks-1 chuncks have size chunkSIZE
         for i_chunk in range(n_chunks-1):
             j = i_chunk * chunkSIZE + cuda.threadIdx.x
-            if cuda.threadIdx.x < chunkSIZE:
-                local_buffer[cuda.threadIdx.x, 0] = pt2[j, 0]
-                local_buffer[cuda.threadIdx.x, 1] = pt2[j, 1]
-                local_buffer[cuda.threadIdx.x, 2] = pt2[j, 2]
-                local_buffer[cuda.threadIdx.x, 3] = pt2[j, 3]
+            local_buffer[cuda.threadIdx.x, 0] = pt2[j, 0]
+            local_buffer[cuda.threadIdx.x, 1] = pt2[j, 1]
+            local_buffer[cuda.threadIdx.x, 2] = pt2[j, 2]
+            local_buffer[cuda.threadIdx.x, 3] = pt2[j, 3]
             cuda.syncthreads()
 
             for q in range(chunkSIZE):
@@ -97,15 +96,15 @@ def double_chop_pairs_cuda_shmem_transpose(
                         break
 
         # last chunk has fewer points
+        last_chunk = total - (n_chunks-1) * chunkSIZE
         j = (n_chunks-1) * chunkSIZE + cuda.threadIdx.x
-        if j < total:
+        if cuda.threadIdx.x < last_chunk:
             local_buffer[cuda.threadIdx.x, 0] = pt2[j, 0]
             local_buffer[cuda.threadIdx.x, 1] = pt2[j, 1]
             local_buffer[cuda.threadIdx.x, 2] = pt2[j, 2]
             local_buffer[cuda.threadIdx.x, 3] = pt2[j, 3]
         cuda.syncthreads()
 
-        last_chunk = total - (n_chunks-1) * chunkSIZE
         for q in range(last_chunk):
             qx, qy, qz, qw = local_buffer[q]
 
