@@ -241,6 +241,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2):
         runtime = (end-start)/3
 
     print('time:', runtime)
+    print('\n')
 
 
 if __name__ == '__main__':
