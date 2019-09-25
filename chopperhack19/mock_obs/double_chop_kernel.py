@@ -45,7 +45,7 @@ def double_chop_pairs_cuda(
                     break
 
 
-@cuda.jit
+@cuda.jit(fastmath=True)
 def double_chop_pairs_cuda_shmem_transpose(
         pt1, cell1, pt2, indx2, rbins_squared, result):
     """Naively count Npairs(<r), the total number of pairs that are separated
@@ -67,11 +67,13 @@ def double_chop_pairs_cuda_shmem_transpose(
         first = indx2[cell1_i]
         last = indx2[cell1_i+1]
 
-        n_chunks = (last - first + chunkSIZE - 1) // chunkSIZE
+        total = last - first
+        n_chunks = (total + chunkSIZE - 1) // chunkSIZE
 
-        for i_chunk in range(n_chunks):
+        # The first n_chunks-1 chuncks have size chunkSIZE
+        for i_chunk in range(n_chunks-1):
+            j = i_chunk * chunkSIZE + cuda.threadIdx.x
             if cuda.threadIdx.x < chunkSIZE:
-                j = i_chunk * chunkSIZE + cuda.threadIdx.x
                 local_buffer[cuda.threadIdx.x, 0] = pt2[j, 0]
                 local_buffer[cuda.threadIdx.x, 1] = pt2[j, 1]
                 local_buffer[cuda.threadIdx.x, 2] = pt2[j, 2]
@@ -93,3 +95,29 @@ def double_chop_pairs_cuda_shmem_transpose(
                     k = k-1
                     if k <= 0:
                         break
+
+        # last chunk has fewer points
+        j = (n_chunks-1) * chunkSIZE + cuda.threadIdx.x
+        if j < total:
+            local_buffer[cuda.threadIdx.x, 0] = pt2[j, 0]
+            local_buffer[cuda.threadIdx.x, 1] = pt2[j, 1]
+            local_buffer[cuda.threadIdx.x, 2] = pt2[j, 2]
+            local_buffer[cuda.threadIdx.x, 3] = pt2[j, 3]
+        cuda.syncthreads()
+
+        last_chunk = total - (n_chunks-1) * chunkSIZE
+        for q in range(last_chunk):
+            qx, qy, qz, qw = local_buffer[q]
+
+            dx = px-qx
+            dy = py-qy
+            dz = pz-qz
+            wprod = pw*qw
+            dsq = dx*dx + dy*dy + dz*dz
+
+            k = nbins-1
+            while dsq <= rbins_squared[k]:
+                cuda.atomic.add(result, k-1, wprod)
+                k = k-1
+                if k <= 0:
+                    break
