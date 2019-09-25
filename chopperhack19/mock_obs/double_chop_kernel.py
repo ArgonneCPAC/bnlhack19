@@ -4,7 +4,7 @@ from numba import cuda
 
 
 @cuda.jit
-def double_chop_pairs(
+def double_chop_pairs_cuda(
         x1, y1, z1, w1, cell1, x2, y2, z2, w2, indx2, rbins_squared, result):
     """Naively count Npairs(<r), the total number of pairs that are separated
     by a distance less than r, for each r**2 in the input rbins_squared.
