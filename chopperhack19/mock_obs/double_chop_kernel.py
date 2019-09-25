@@ -3,7 +3,7 @@
 from numba import cuda
 
 
-@cuda.njit
+@cuda.jit
 def double_chop_pairs(
         x1, y1, z1, w1, cell1, x2, y2, z2, w2, indx2, rbins_squared, result):
     """Naively count Npairs(<r), the total number of pairs that are separated
