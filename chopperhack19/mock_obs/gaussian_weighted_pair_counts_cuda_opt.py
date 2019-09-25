@@ -161,7 +161,7 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
                 g{{ bin }} += (w1[i] * w2[j])
             {% endfor %}
 
-    for k in range(n_bins):
+    for k in range(nbins):
         if k == 0:
             smem[cuda.threadIdx.x] = g0
         {% for bin in range(1, n_bins) %}
