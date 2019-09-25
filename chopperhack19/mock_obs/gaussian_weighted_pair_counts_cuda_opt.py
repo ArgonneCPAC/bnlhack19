@@ -61,7 +61,7 @@ def count_weighted_pairs_3d_cuda_smemload_noncuml(
     sz = cuda.shared.array(SMEM_CHUNK_SIZE, numba.float32)
     sw = cuda.shared.array(SMEM_CHUNK_SIZE, numba.float32)
 
-    n_loads = SMEM_CHUNK_SIZE // cuda.blockDim
+    n_loads = SMEM_CHUNK_SIZE // cuda.blockDim.x
 
     for i in range(start, n1, stride):
         for chunk in range(n_chunks):
