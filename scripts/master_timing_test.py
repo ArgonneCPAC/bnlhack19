@@ -138,7 +138,7 @@ def _main(func, blocks, threads, npoints):
         nx2 = nx1
         ny2 = ny1
         nz2 = nz1
-        rmax_x = DEFAULT_RBINS_SQUARED[-1]
+        rmax_x = np.sqrt(DEFAULT_RBINS_SQUARED[-1])
         rmax_y = rmax_x
         rmax_z = rmax_y
         xperiod = Lbox
