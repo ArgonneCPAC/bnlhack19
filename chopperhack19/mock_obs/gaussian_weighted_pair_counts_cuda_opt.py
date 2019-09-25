@@ -85,20 +85,26 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
 
     smem = cuda.shared.array(512, numba.float32)
 
-    for k in range(1):
-        g = 0
-        for i in range(start, n1, stride):
-            for j in range(n2):
-                dx = x1[i] - x2[j]
-                dy = y1[i] - y2[j]
-                dz = z1[i] - z2[j]
-                dsq = cuda.fma(dx, dx, cuda.fma(dy, dy, dz * dz))
+    g0 = 0
+    g1 = 0
+    for i in range(start, n1, stride):
+        for j in range(n2):
+            dx = x1[i] - x2[j]
+            dy = y1[i] - y2[j]
+            dz = z1[i] - z2[j]
+            dsq = cuda.fma(dx, dx, cuda.fma(dy, dy, dz * dz))
 
-                _k = int((math.log(dsq)/2 - logminr) / dlogr)
-                if k == _k:
-                    g += (w1[i] * w2[j])
+            k = int((math.log(dsq)/2 - logminr) / dlogr)
+            if k == nbins-1:
+                g0 += (w1[i] * w2[j])
+            elif k == nbins-2:
+                g1 += (w1[i] * w2[j])
 
-        smem[cuda.threadIdx.x] = g
+    for k in range(nbins-1, nbins-3, -1):
+        if k == nbins-1:
+            smem[cuda.threadIdx.x] = g0
+        elif k == nbins-2:
+            smem[cuda.threadIdx.x] = g1
 
         cuda.syncthreads()
 
