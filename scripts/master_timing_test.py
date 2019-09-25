@@ -42,6 +42,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2):
     _x1, _y1, _z1, _w1 = random_weighted_points(n1, Lbox, 0)
     _x2, _y2, _z2, _w2 = random_weighted_points(n2, Lbox, 1)
     if 'cuda_mesh' in func_str:
+        print('nmesh1:', nmesh1)
         _cell_id_indices = np.zeros(len(_x1))
         _cell_id2_indices = np.zeros(len(_x1))
         _ndiv = np.array([nmesh1]*3, dtype=np.int32)
@@ -53,6 +54,8 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2):
             _num_cell2_steps)
     elif 'double_chop' in func_str: 
         from chopperhack19.mock_obs import chaining_mesh as cm
+        print('nmesh1:', nmesh1)
+        print('nmesh2:', nmesh2)
         nx1 = nmesh1
         ny1 = nmesh1
         nz1 = nmesh1
