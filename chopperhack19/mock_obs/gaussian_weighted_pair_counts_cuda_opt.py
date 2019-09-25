@@ -36,7 +36,7 @@ def count_weighted_pairs_3d_cuda_noncuml(
                 cuda.atomic.add(result, k, w1[i] * w2[j])
 
 
-SMEM_CHUNK_SIZE = 256
+SMEM_CHUNK_SIZE = 2048
 
 
 @cuda.jit(fastmath=True)
@@ -61,6 +61,8 @@ def count_weighted_pairs_3d_cuda_smemload_noncuml(
     sz = cuda.shared.array(SMEM_CHUNK_SIZE, numba.float32)
     sw = cuda.shared.array(SMEM_CHUNK_SIZE, numba.float32)
 
+    n_loads = SMEM_CHUNK_SIZE // cuda.blockDim
+
     for i in range(start, n1, stride):
         for chunk in range(n_chunks):
             loc = chunk * SMEM_CHUNK_SIZE
@@ -68,11 +70,14 @@ def count_weighted_pairs_3d_cuda_smemload_noncuml(
             if endloc > n2:
                 endloc = n2
             tmax = endloc - loc
-            if cuda.threadIdx.x < tmax:
-                sx[cuda.threadIdx.x] = x2[loc + cuda.threadIdx.x]
-                sy[cuda.threadIdx.x] = y2[loc + cuda.threadIdx.x]
-                sz[cuda.threadIdx.x] = z2[loc + cuda.threadIdx.x]
-                sw[cuda.threadIdx.x] = w2[loc + cuda.threadIdx.x]
+            for l in range(n_loads):
+                idx = cuda.threadIdx.x + l
+                if idx < tmax:
+                    midx = loc + idx
+                    sx[idx] = x2[midx]
+                    sy[idx] = y2[midx]
+                    sz[idx] = z2[midx]
+                    sw[idx] = w2[midx]
             cuda.syncthreads()
 
             for j in range(tmax):
