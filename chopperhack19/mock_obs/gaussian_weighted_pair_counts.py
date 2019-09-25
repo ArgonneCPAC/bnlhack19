@@ -75,7 +75,7 @@ def count_weighted_pairs_3d_cuda_mesh(
                                 z1tmp = z_icell1[i]
                                 w1tmp = w_icell1[i]
                                 for j in range(0, Nj):
-                                    #calculate the square distance
+                                    # calculate the square distance
                                     dx = x1tmp - x_icell2[j]
                                     dy = y1tmp - y_icell2[j]
                                     dz = z1tmp - z_icell2[j]
@@ -85,8 +85,9 @@ def count_weighted_pairs_3d_cuda_mesh(
                                     k = nbins-1
                                     while dsq <= rbins_squared[k]:
                                         cuda.atomic.add(result, k-1, wprod)
-                                        k=k-1
-                                        if k<0: break
+                                        k = k-1
+                                        if k < 0:
+                                            break
 
 
 @cuda.jit
