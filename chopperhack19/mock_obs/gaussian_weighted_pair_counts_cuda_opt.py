@@ -3,7 +3,7 @@ from numba import cuda
 import math
 import jinja2
 
-__all__ = (
+__all__ = (  # noqa
     'count_weighted_pairs_3d_cuda_smem_noncuml',
     'count_weighted_pairs_3d_cuda_noncuml',
     'count_weighted_pairs_3d_cuda_transpose_noncuml',
