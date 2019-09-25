@@ -12,7 +12,8 @@ __all__ = (
     'count_weighted_pairs_3d_cpu_corrfunc',
     'count_weighted_pairs_3d_cpu_mp',
     'count_weighted_pairs_3d_cpu',
-    'count_weighted_pairs_3d_cpu_noncuml_pairsonly')
+    'count_weighted_pairs_3d_cpu_noncuml_pairsonly',
+    'count_weighted_pairs_3d_cpu_test_for_max')
 
 
 @cuda.jit
@@ -232,3 +233,21 @@ def count_weighted_pairs_3d_cpu_noncuml_pairsonly(
     result[0] += g
 
     return result
+
+
+def count_weighted_pairs_3d_cpu_test_for_max(
+        x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
+
+    n1 = x1.shape[0]
+    n2 = x2.shape[0]
+
+    g = 0
+    for i in range(n1):
+        for j in range(n2):
+            dx = x1[i] - x2[j]
+            dy = y1[i] - y2[j]
+            dz = z1[i] - z2[j]
+            dsq = dx*dx + dy*dy + dz*dz
+            g += (w1[i] * w2[j] * dsq)
+
+    result[0] += g
