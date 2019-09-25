@@ -83,7 +83,7 @@ def count_weighted_pairs_3d_cuda_revchop_noncuml(
         _rbins_squared[1] / _rbins_squared[0]) / 2
     logminr = math.log(_rbins_squared[0]) / 2
 
-    smem = cuda.shared.array(512, numba.float32)
+    smem = cuda.shared.array(2048, numba.float32)
 
     g0 = 0
     g1 = 0
