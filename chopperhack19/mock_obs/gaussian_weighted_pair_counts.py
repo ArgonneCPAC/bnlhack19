@@ -133,7 +133,8 @@ def count_weighted_pairs_3d_cpu_corrfunc(
     from Corrfunc.theory.DD import DD
     import multiprocessing
     rbins = np.sqrt(rbins_squared)
-    threads = multiprocessing.cpu_count()
+    #threads = multiprocessing.cpu_count()
+    threads = 1
     _result = DD(
         0, threads, rbins, x1, y1, z1,
         weights1=w1, weight_type='pair_product',
