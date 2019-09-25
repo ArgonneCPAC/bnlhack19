@@ -13,7 +13,8 @@ DEFAULT_RBINS = np.logspace(
     np.log10(DEFAULT_RMIN), np.log10(DEFAULT_RMAX), DEFAULT_NBINS).astype(
         np.float32)
 DEFAULT_RBINS_SQUARED = (DEFAULT_RBINS**2).astype(np.float32)
-DEFAULT_NMESH = 16
+DEFAULT_NMESH1 = 4
+DEFAULT_NMESH2 = 16
 
 def random_weighted_points(n, Lbox, seed=DEFAULT_SEED):
     """
