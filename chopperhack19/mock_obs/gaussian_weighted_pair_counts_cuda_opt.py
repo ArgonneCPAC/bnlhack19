@@ -71,7 +71,7 @@ def count_weighted_pairs_3d_cuda_smemload_noncuml(
                 endloc = n2
             tmax = endloc - loc
             for l in range(n_loads):
-                idx = cuda.threadIdx.x + l
+                idx = n_loads * cuda.threadIdx.x + l
                 if idx < tmax:
                     midx = loc + idx
                     sx[idx] = x2[midx]
