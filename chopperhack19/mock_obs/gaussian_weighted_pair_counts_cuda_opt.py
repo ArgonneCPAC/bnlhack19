@@ -326,11 +326,12 @@ def count_weighted_pairs_3d_cuda_transpose2d_smem(
     loc_1 = cuda.blockIdx.x * n1
     loc_2 = cuda.blockIdx.y * n2
 
-    chunk_size = 32
+    chunk_size = 64
     local_buffer1 = cuda.shared.array((chunk_size, 4), numba.float32)
     local_buffer2 = cuda.shared.array((chunk_size, 4), numba.float32)
 
     n_loads = (chunk_size + cuda.blockDim.x - 1) // cuda.blockDim.x
+    n_comps = cuda.blockDim.x // chunk_size
 
     n_chunks1 = (n1 + chunk_size - 1) // chunk_size
     n_chunks2 = (n2 + chunk_size - 1) // chunk_size
@@ -369,10 +370,13 @@ def count_weighted_pairs_3d_cuda_transpose2d_smem(
 
             # let the threads each handle one thing
             for load in range(n_loads):
-                tloc = n_loads * cuda.threadIdx.x + load
+                tloc = (n_loads * cuda.threadIdx.x + load) // n_comps
                 if tloc < chunk_size:
                     px, py, pz, pw = local_buffer1[tloc]
-                    for q in range(chunk_size):
+
+                    comp_start = (
+                        n_loads * cuda.threadIdx.x + load - tloc * n_comps)
+                    for q in range(comp_start, chunk_size, n_comps):
                         qx, qy, qz, qw = local_buffer2[q]
 
                         dx = px-qx
