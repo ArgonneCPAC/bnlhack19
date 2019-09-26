@@ -46,7 +46,7 @@ def test_accuracy_cpu(func):
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result_cpu)
 
     # check if they are the same
-    assert np.allclose(result_cpu, result_gpu, rtol=2e-7, atol=0)
+    assert np.allclose(result_cpu_func, result_cpu, rtol=2e-7, atol=0)
 
 @pytest.mark.parametrize('func', [
     count_weighted_pairs_3d_cuda_transpose2d_smem])
@@ -81,7 +81,7 @@ def test_accuracy_transpose(func):
 
     count_weighted_pairs_3d_cpu(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result_cpu)
-    func[(512,512),512](d_ptswts1, d_ptswts2, d_rbins_squared, d_result)
+    func[(512,512),128](d_ptswts1, d_ptswts2, d_rbins_squared, d_result)
     result_gpu = d_result.copy_to_host()
     assert np.allclose(result_cpu, result_gpu, rtol=2e-7, atol=0)
 
@@ -167,7 +167,7 @@ def test_accuracy_gpu(func):
     d_result_gpu = cuda.to_device(result_cpu)
 
     # run CPU test
-    count_weighted_pairs_3d_cpu(
+    count_weighted_pairs_3d_cpu_corrfunc(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result_cpu)
 
     # run GPU test
