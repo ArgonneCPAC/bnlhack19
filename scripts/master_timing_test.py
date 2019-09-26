@@ -191,6 +191,8 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
         end = time()
         assert np.all(np.isfinite(results_host))
         runtime = (end-start)/3
+
+        results_host /= 3
     elif ('double_chop' in func_str and
             'cuda' in func_str and 'transpose' in func_str):
         nx1 = nmesh1
@@ -241,6 +243,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
         assert np.all(np.isfinite(results_host))
         runtime = (end-start)/3
 
+        results_host /= 3
     elif 'double_chop' in func_str:
         nx1 = nmesh1
         ny1 = nmesh1
@@ -281,6 +284,8 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
             results_host = d_result.copy_to_host()
         end = time()
         runtime = (end-start)/3
+
+        results_host /= 3
     elif 'cuda_transpose2d' in func_str:
         ptswts1 = np.empty((x1.size, 4), dtype=np.float32)
         ptswts1[:, 0] = x1
@@ -308,6 +313,8 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
         end = time()
         assert np.all(np.isfinite(results_host))
         runtime = (end-start)/3
+
+        results_host /= 3
     elif 'cuda_transpose' in func_str:
         ptswts1 = np.stack([x1, y1, z1, w1], axis=1).ravel().astype(np.float32)
         ptswts2 = np.stack([x2, y2, z2, w2], axis=1).ravel().astype(np.float32)
@@ -327,6 +334,8 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
         end = time()
         assert np.all(np.isfinite(results_host))
         runtime = (end-start)/3
+
+        results_host /= 3
     elif 'cuda' in func_str:
         d_x1 = cuda.to_device(x1.astype(np.float32))
         d_y1 = cuda.to_device(y1.astype(np.float32))
@@ -351,6 +360,8 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
         end = time()
         assert np.all(np.isfinite(results_host))
         runtime = (end-start)/3
+
+        results_host /= 3
     else:
         d_x1 = x1
         d_y1 = y1
@@ -372,7 +383,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
                 d_rbins_squared, d_result)
         end = time()
         runtime = (end-start)/3
-        results_host = d_result
+        results_host = d_result / 3
 
     # run corrfunc to check
     result_test = np.zeros_like(result)
@@ -382,7 +393,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
 
     print('time:', runtime)
     print('correct (only true for cumulative bins):', correct)
-    print('result:', results_host/3)
+    print('result:', results_host)
     print('result (corrfunc):', result_test)
 
 
