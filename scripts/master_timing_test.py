@@ -16,7 +16,8 @@ from time import time
 @click.option('--npoints', default=200013)
 @click.option('--nmesh1', default=4)
 @click.option('--nmesh2', default=16)
-def _main(func, blocks, threads, npoints, nmesh1, nmesh2):
+@click.option('--skip-numba-comp', is_flag=True, default=False)
+def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
 
     func_str = func
     func = getattr(chopperhack19.mock_obs, func)
@@ -37,110 +38,111 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2):
     result = result.astype(np.float32)
 
     # get numba to compile once
-    n1 = 128
-    n2 = 128
-    _x1, _y1, _z1, _w1 = random_weighted_points(n1, Lbox, 0)
-    _x2, _y2, _z2, _w2 = random_weighted_points(n2, Lbox, 1)
-    if 'cuda_mesh' in func_str:
-        print('nmesh1:', nmesh1)
-        _cell_id_indices = np.zeros(len(_x1))
-        _cell_id2_indices = np.zeros(len(_x1))
-        _ndiv = np.array([nmesh1]*3, dtype=np.int32)
-        _num_cell2_steps = np.array([1]*3, dtype=np.int32)
-        func[blocks, threads](
-            _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
-            DEFAULT_RBINS_SQUARED, result,
-            _ndiv, _cell_id_indices, _cell_id2_indices,
-            _num_cell2_steps)
-    elif ('double_chop' in func_str and
-            'cuda' in func_str and 'transpose' in func_str):
-        from chopperhack19.mock_obs import chaining_mesh as cm
-        nx1 = nmesh1
-        ny1 = nmesh1
-        nz1 = nmesh1
-        nx2 = nmesh2
-        ny2 = nmesh2
-        nz2 = nmesh2
-        rmax_x = np.sqrt(DEFAULT_RBINS_SQUARED[-1])
-        rmax_y = rmax_x
-        rmax_z = rmax_y
-        xperiod = Lbox
-        yperiod = Lbox
-        zperiod = Lbox
-        (x1out, y1out, z1out, w1out, cell1out,
-         x2out, y2out, z2out, w2out, indx2) = (
-            cm.get_double_chopped_data(
-                _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2, nx1, ny1, nz1,
-                nx2, ny2, nz2,
-                rmax_x, rmax_y, rmax_z, xperiod, yperiod, zperiod))
+    if not skip_numba_comp:
+        n1 = 128
+        n2 = 128
+        _x1, _y1, _z1, _w1 = random_weighted_points(n1, Lbox, 0)
+        _x2, _y2, _z2, _w2 = random_weighted_points(n2, Lbox, 1)
+        if 'cuda_mesh' in func_str:
+            print('nmesh1:', nmesh1)
+            _cell_id_indices = np.zeros(len(_x1))
+            _cell_id2_indices = np.zeros(len(_x1))
+            _ndiv = np.array([nmesh1]*3, dtype=np.int32)
+            _num_cell2_steps = np.array([1]*3, dtype=np.int32)
+            func[blocks, threads](
+                _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
+                DEFAULT_RBINS_SQUARED, result,
+                _ndiv, _cell_id_indices, _cell_id2_indices,
+                _num_cell2_steps)
+        elif ('double_chop' in func_str and
+                'cuda' in func_str and 'transpose' in func_str):
+            from chopperhack19.mock_obs import chaining_mesh as cm
+            nx1 = nmesh1
+            ny1 = nmesh1
+            nz1 = nmesh1
+            nx2 = nmesh2
+            ny2 = nmesh2
+            nz2 = nmesh2
+            rmax_x = np.sqrt(DEFAULT_RBINS_SQUARED[-1])
+            rmax_y = rmax_x
+            rmax_z = rmax_y
+            xperiod = Lbox
+            yperiod = Lbox
+            zperiod = Lbox
+            (x1out, y1out, z1out, w1out, cell1out,
+             x2out, y2out, z2out, w2out, indx2) = (
+                cm.get_double_chopped_data(
+                    _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2, nx1, ny1, nz1,
+                    nx2, ny2, nz2,
+                    rmax_x, rmax_y, rmax_z, xperiod, yperiod, zperiod))
 
-        ptswts1 = np.empty((x1out.size, 4), dtype=np.float32)
-        ptswts1[:, 0] = x1out
-        ptswts1[:, 1] = y1out
-        ptswts1[:, 2] = z1out
-        ptswts1[:, 3] = w1out
-        ptswts2 = np.empty((x2out.size, 4), dtype=np.float32)
-        ptswts2[:, 0] = x2out
-        ptswts2[:, 1] = y2out
-        ptswts2[:, 2] = z2out
-        ptswts2[:, 3] = w2out
+            ptswts1 = np.empty((x1out.size, 4), dtype=np.float32)
+            ptswts1[:, 0] = x1out
+            ptswts1[:, 1] = y1out
+            ptswts1[:, 2] = z1out
+            ptswts1[:, 3] = w1out
+            ptswts2 = np.empty((x2out.size, 4), dtype=np.float32)
+            ptswts2[:, 0] = x2out
+            ptswts2[:, 1] = y2out
+            ptswts2[:, 2] = z2out
+            ptswts2[:, 3] = w2out
 
-        func[blocks, threads](
-            ptswts1, cell1out, ptswts2, indx2, DEFAULT_RBINS_SQUARED, result)
-    elif 'double_chop' in func_str:
-        from chopperhack19.mock_obs import chaining_mesh as cm
-        nx1 = nmesh1
-        ny1 = nmesh1
-        nz1 = nmesh1
-        nx2 = nmesh2
-        ny2 = nmesh2
-        nz2 = nmesh2
-        rmax_x = np.sqrt(DEFAULT_RBINS_SQUARED[-1])
-        rmax_y = rmax_x
-        rmax_z = rmax_y
-        xperiod = Lbox
-        yperiod = Lbox
-        zperiod = Lbox
-        (x1out, y1out, z1out, w1out, cell1out,
-         x2out, y2out, z2out, w2out, indx2) = (
-            cm.get_double_chopped_data(
-                _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2, nx1, ny1,
-                nz1, nx2, ny2, nz2,
-                rmax_x, rmax_y, rmax_z, xperiod, yperiod, zperiod))
-        func[blocks, threads](
-            x1out, y1out, z1out, w1out, cell1out,
-            x2out, y2out, z2out, w2out, indx2,
-            DEFAULT_RBINS_SQUARED, result)
-    elif 'cuda_transpose2d' in func_str:
-        ptswts1 = np.empty((_x1.size, 4), dtype=np.float32)
-        ptswts1[:, 0] = _x1
-        ptswts1[:, 1] = _y1
-        ptswts1[:, 2] = _z1
-        ptswts1[:, 3] = _w1
-        ptswts2 = np.empty((_x2.size, 4), dtype=np.float32)
-        ptswts2[:, 0] = _x2
-        ptswts2[:, 1] = _y2
-        ptswts2[:, 2] = _z2
-        ptswts2[:, 3] = _w2
+            func[blocks, threads](
+                ptswts1, cell1out, ptswts2, indx2, DEFAULT_RBINS_SQUARED, result)
+        elif 'double_chop' in func_str:
+            from chopperhack19.mock_obs import chaining_mesh as cm
+            nx1 = nmesh1
+            ny1 = nmesh1
+            nz1 = nmesh1
+            nx2 = nmesh2
+            ny2 = nmesh2
+            nz2 = nmesh2
+            rmax_x = np.sqrt(DEFAULT_RBINS_SQUARED[-1])
+            rmax_y = rmax_x
+            rmax_z = rmax_y
+            xperiod = Lbox
+            yperiod = Lbox
+            zperiod = Lbox
+            (x1out, y1out, z1out, w1out, cell1out,
+             x2out, y2out, z2out, w2out, indx2) = (
+                cm.get_double_chopped_data(
+                    _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2, nx1, ny1,
+                    nz1, nx2, ny2, nz2,
+                    rmax_x, rmax_y, rmax_z, xperiod, yperiod, zperiod))
+            func[blocks, threads](
+                x1out, y1out, z1out, w1out, cell1out,
+                x2out, y2out, z2out, w2out, indx2,
+                DEFAULT_RBINS_SQUARED, result)
+        elif 'cuda_transpose2d' in func_str:
+            ptswts1 = np.empty((_x1.size, 4), dtype=np.float32)
+            ptswts1[:, 0] = _x1
+            ptswts1[:, 1] = _y1
+            ptswts1[:, 2] = _z1
+            ptswts1[:, 3] = _w1
+            ptswts2 = np.empty((_x2.size, 4), dtype=np.float32)
+            ptswts2[:, 0] = _x2
+            ptswts2[:, 1] = _y2
+            ptswts2[:, 2] = _z2
+            ptswts2[:, 3] = _w2
 
-        func[(blocks, blocks), 1024](
-            ptswts1, ptswts2, DEFAULT_RBINS_SQUARED, result)
-    elif 'cuda_transpose' in func_str:
-        ptswts1 = np.stack(
-            [_x1, _y1, _z1, _w1], axis=1).ravel().astype(np.float32)
-        ptswts2 = np.stack(
-            [_x2, _y2, _z2, _w2], axis=1).ravel().astype(np.float32)
+            func[(blocks, blocks), 1024](
+                ptswts1, ptswts2, DEFAULT_RBINS_SQUARED, result)
+        elif 'cuda_transpose' in func_str:
+            ptswts1 = np.stack(
+                [_x1, _y1, _z1, _w1], axis=1).ravel().astype(np.float32)
+            ptswts2 = np.stack(
+                [_x2, _y2, _z2, _w2], axis=1).ravel().astype(np.float32)
 
-        func[blocks, threads](
-            ptswts1, ptswts2, DEFAULT_RBINS_SQUARED, result)
-    elif 'cuda' in func_str:
-        func[blocks, threads](
-            _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
-            DEFAULT_RBINS_SQUARED, result)
-    else:
-        func(
-            _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
-            DEFAULT_RBINS_SQUARED, result)
+            func[blocks, threads](
+                ptswts1, ptswts2, DEFAULT_RBINS_SQUARED, result)
+        elif 'cuda' in func_str:
+            func[blocks, threads](
+                _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
+                DEFAULT_RBINS_SQUARED, result)
+        else:
+            func(
+                _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
+                DEFAULT_RBINS_SQUARED, result)
 
     n1 = npoints
     n2 = npoints

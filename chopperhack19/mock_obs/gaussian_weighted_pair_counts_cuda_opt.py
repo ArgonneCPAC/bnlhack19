@@ -333,6 +333,9 @@ def count_weighted_pairs_3d_cuda_transpose2d_smem(
     n_chunks1 = (n1 + chunk_size - 1) // chunk_size
     n_chunks2 = (n2 + chunk_size - 1) // chunk_size
 
+    assert n_chunks1 * chunk_size * cuda.gridDim.x == pt1.shape[0]
+    assert n_chunks2 * chunk_size * cuda.gridDim.y == pt2.shape[0]
+
     for chunk1 in range(n_chunks1):
         # do load
         loc = loc_1 + chunk1 * chunk_size + cuda.threadIdx.x
