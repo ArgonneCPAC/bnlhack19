@@ -12,7 +12,7 @@ __all__ = (  # noqa
     'count_weighted_pairs_3d_cuda_noncuml_pairsonly',
     'count_weighted_pairs_3d_cuda_noncuml',
     'count_weighted_pairs_3d_cuda_smemload_noncuml_pairsonly',
-    'count_weighted_pairs_3d_cuda_transpose_2d_smem')
+    'count_weighted_pairs_3d_cuda_transpose2d_smem')
 
 
 @cuda.jit(fastmath=True)
@@ -314,7 +314,7 @@ def count_weighted_pairs_3d_cuda_transpose_noncuml(
 
 
 @cuda.jit(fastmath=True)
-def count_weighted_pairs_3d_cuda_transpose_2d_smem(
+def count_weighted_pairs_3d_cuda_transpose2d_smem(
         pt1, pt2, rbins_squared, result):
     """Naively count Npairs(<r), the total number of pairs that are separated
     by a distance less than r, for each r**2 in the input rbins_squared.
