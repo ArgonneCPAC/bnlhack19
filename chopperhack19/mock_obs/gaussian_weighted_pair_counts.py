@@ -142,7 +142,7 @@ def count_weighted_pairs_3d_cpu_corrfunc(
         weights1=w1, weight_type='pair_product',
         X2=x2, Y2=y2, Z2=z2, weights2=w2,
         periodic=False)
-    result[:] = np.cumsum(_result['weightavg'] * _result['npairs'])
+    result[:] = result + np.cumsum(_result['weightavg'] * _result['npairs'])
 
 
 def count_weighted_pairs_3d_cpu_mp(
@@ -171,7 +171,7 @@ def count_weighted_pairs_3d_cpu_mp(
             n_jobs=multiprocessing.cpu_count(), backend='loky') as p:
         res = p(jobs)
 
-    result[:] = np.sum(np.stack(res, axis=1), axis=1)
+    result[:] = result + np.sum(np.stack(res, axis=1), axis=1)
 
 
 @njit()
