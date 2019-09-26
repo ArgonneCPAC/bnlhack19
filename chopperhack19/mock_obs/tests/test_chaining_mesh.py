@@ -6,13 +6,13 @@ from ..chaining_mesh import calculate_chaining_mesh
 DEFAULT_SEED = 43
 
 
-def random_points(n, Lbox, seed=DEFAULT_SEED):
+def random_weighted_points(n, Lbox, seed=DEFAULT_SEED):
     """
     """
     rng = np.random.RandomState(seed)
     data = rng.uniform(0, 1, n*4)
-    x, y, z = data[:n]*Lbox, data[n:2*n]*Lbox, data[2*n:3*n]*Lbox
-    return x, y, z
+    x, y, z, w = data[:n]*Lbox, data[n:2*n]*Lbox, data[2*n:3*n]*Lbox, data[3*n:4*n]*Lbox
+    return x, y, z, w
 
 
 def test1():
@@ -23,15 +23,15 @@ def test1():
 
     nx, ny, nz = 5, 5, 5
 
-    x, y, z = random_points(n, Lbox)
+    x, y, z, w = random_weighted_points(n, Lbox)
 
-    results = calculate_chaining_mesh(x, y, z, Lbox, Lbox, Lbox, nx, ny, nz)
-    xout, yout, zout, ixout, iyout, izout, cell_id_out, idx_sorted, cell_id_indices = results
+    results = calculate_chaining_mesh(x, y, z, w, Lbox, Lbox, Lbox, nx, ny, nz)
+    xout, yout, zout, wout, ixout, iyout, izout, cell_id_out, idx_sorted, cell_id_indices = results
 
     assert np.allclose(x[idx_sorted], xout)
     assert np.allclose(y[idx_sorted], yout)
     assert np.allclose(z[idx_sorted], zout)
-
+    assert np.allclose(w[idx_sorted], wout)
 
 def test2():
     """Compare brute-force pair counts to chaining-mesh pair counts
@@ -50,25 +50,28 @@ def test2():
     counts_mesh = np.zeros(nbins).astype(int)
     counts_nomesh = np.zeros(nbins).astype(int)
 
-    x1, y1, z1 = random_points(n1, Lbox, 0)
-    results = calculate_chaining_mesh(x1, y1, z1, Lbox, Lbox, Lbox, nx, ny, nz)
-    x1out, y1out, z1out, ixout, iyout, izout, cell_id_out, idx_sorted, cell_id_indices = results
+    x1, y1, z1, w1 = random_weighted_points(n1, Lbox, 0)
+    results = calculate_chaining_mesh(x1, y1, z1, w1, Lbox, Lbox, Lbox, nx, ny, nz)
+    x1out, y1out, z1out, w1out, ixout, iyout, izout, cell_id_out, idx_sorted, cell_id_indices = results
 
-    x2, y2, z2 = random_points(n2, Lbox, 1)
-    results2 = calculate_chaining_mesh(x2, y2, z2, Lbox, Lbox, Lbox, nx, ny, nz)
-    x2out, y2out, z2out, ix2out, iy2out, iz2out, cell_id2_out, idx_sorted2, cell_id2_indices = results2
+    x2, y2, z2, w2 = random_weighted_points(n2, Lbox, 1)
+    results2 = calculate_chaining_mesh(x2, y2, z2, w2, Lbox, Lbox, Lbox, nx, ny, nz)
+    x2out, y2out, z2out, w2out, ix2out, iy2out, iz2out, cell_id2_out, idx_sorted2, cell_id2_indices = results2
 
     for i in range(n1):
         px = x1[i]
         py = y1[i]
         pz = z1[i]
+        pw = w1[i]
         for j in range(n2):
             qx = x2[j]
             qy = y2[j]
             qz = z2[j]
+            qw = w2[j]
             dx = px-qx
             dy = py-qy
             dz = pz-qz
+            wprod = pw*qw
             dsq = dx*dx + dy*dy + dz*dz
 
             k = nbins-1
