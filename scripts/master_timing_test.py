@@ -378,6 +378,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
     result_test = np.zeros_like(result)
     chopperhack19.mock_obs.count_weighted_pairs_3d_cpu_corrfunc(
         x1, y1, z1, w1, x2, y2, z2, w2, DEFAULT_RBINS_SQUARED, result_test)
+    print(result_test)
     correct = np.allclose(result_test, results_host)
 
     print('time:', runtime)
