@@ -126,7 +126,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
             ptswts2[:, 2] = _z2
             ptswts2[:, 3] = _w2
 
-            func[(blocks, blocks), 1024](
+            func[(blocks, blocks), threads](
                 ptswts1, ptswts2, DEFAULT_RBINS_SQUARED, result)
         elif 'cuda_transpose' in func_str:
             ptswts1 = np.stack(
@@ -308,7 +308,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
 
         start = time()
         for _ in range(3):
-            func[(blocks, blocks), 1024](
+            func[(blocks, blocks), threads](
                 d_ptswts1, d_ptswts2, d_rbins_squared, d_result)
             results_host = d_result.copy_to_host()
         end = time()

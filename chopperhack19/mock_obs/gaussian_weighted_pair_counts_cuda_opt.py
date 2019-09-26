@@ -326,47 +326,62 @@ def count_weighted_pairs_3d_cuda_transpose2d_smem(
     loc_1 = cuda.blockIdx.x * n1
     loc_2 = cuda.blockIdx.y * n2
 
-    chunk_size = 1024  # hard-coded to be the same as block size
-    local_buffer1 = cuda.shared.array((1024, 4), numba.float32)
-    local_buffer2 = cuda.shared.array((1024, 4), numba.float32)
+    chunk_size = 256
+    local_buffer1 = cuda.shared.array((chunk_size, 4), numba.float32)
+    local_buffer2 = cuda.shared.array((chunk_size, 4), numba.float32)
+
+    n_loads = chunk_size // cuda.blockDim.x
 
     n_chunks1 = (n1 + chunk_size - 1) // chunk_size
     n_chunks2 = (n2 + chunk_size - 1) // chunk_size
 
+    assert n_loads == chunk_size * cuda.blockDim.x
     assert n_chunks1 * chunk_size * cuda.gridDim.x == pt1.shape[0]
     assert n_chunks2 * chunk_size * cuda.gridDim.y == pt2.shape[0]
 
     for chunk1 in range(n_chunks1):
         # do load
-        loc = loc_1 + chunk1 * chunk_size + cuda.threadIdx.x
-        local_buffer1[cuda.threadIdx.x, 0] = pt1[loc, 0]
-        local_buffer1[cuda.threadIdx.x, 1] = pt1[loc, 1]
-        local_buffer1[cuda.threadIdx.x, 2] = pt1[loc, 2]
-        local_buffer1[cuda.threadIdx.x, 3] = pt1[loc, 3]
+        for load in range(n_loads):
+            tloc = cuda.blockDim.x * cuda.threadIdx.x + load
+            ploc = (
+                loc_1 +
+                chunk1 * chunk_size +
+                tloc)
+            local_buffer1[tloc, 0] = pt1[ploc, 0]
+            local_buffer1[tloc, 1] = pt1[ploc, 1]
+            local_buffer1[tloc, 2] = pt1[ploc, 2]
+            local_buffer1[tloc, 3] = pt1[ploc, 3]
 
         for chunk2 in range(n_chunks2):
             # do load
-            loc = loc_2 + chunk2 * chunk_size + cuda.threadIdx.x
-            local_buffer2[cuda.threadIdx.x, 0] = pt2[loc, 0]
-            local_buffer2[cuda.threadIdx.x, 1] = pt2[loc, 1]
-            local_buffer2[cuda.threadIdx.x, 2] = pt2[loc, 2]
-            local_buffer2[cuda.threadIdx.x, 3] = pt2[loc, 3]
+            for load in range(n_loads):
+                tloc = cuda.blockDim.x * cuda.threadIdx.x + load
+                ploc = (
+                    loc_2 +
+                    chunk2 * chunk_size +
+                    tloc)
+                local_buffer2[tloc, 0] = pt2[ploc, 0]
+                local_buffer2[tloc, 1] = pt2[ploc, 1]
+                local_buffer2[tloc, 2] = pt2[ploc, 2]
+                local_buffer2[tloc, 3] = pt2[ploc, 3]
             cuda.syncthreads()
 
             # let the threads each handle one thing
-            px, py, pz, pw = local_buffer1[cuda.threadIdx.x]
-            for q in range(chunk_size):
-                qx, qy, qz, qw = local_buffer2[q]
+            for load in range(n_loads):
+                tloc = cuda.blockDim.x * cuda.threadIdx.x + load
+                px, py, pz, pw = local_buffer1[tloc]
+                for q in range(chunk_size):
+                    qx, qy, qz, qw = local_buffer2[q]
 
-                dx = px-qx
-                dy = py-qy
-                dz = pz-qz
-                wprod = pw*qw
-                dsq = dx*dx + dy*dy + dz*dz
+                    dx = px-qx
+                    dy = py-qy
+                    dz = pz-qz
+                    wprod = pw*qw
+                    dsq = dx*dx + dy*dy + dz*dz
 
-                k = nbins-1
-                while dsq <= rbins_squared[k]:
-                    cuda.atomic.add(result, k-1, wprod)
-                    k = k-1
-                    if k <= 0:
-                        break
+                    k = nbins-1
+                    while dsq <= rbins_squared[k]:
+                        cuda.atomic.add(result, k-1, wprod)
+                        k = k-1
+                        if k <= 0:
+                            break
