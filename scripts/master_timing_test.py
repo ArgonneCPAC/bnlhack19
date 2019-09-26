@@ -327,7 +327,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
         end = time()
         assert np.all(np.isfinite(results_host))
         runtime = (end-start)/3
-    elif 'cuda':
+    elif 'cuda' in func_str:
         d_x1 = cuda.to_device(x1.astype(np.float32))
         d_y1 = cuda.to_device(y1.astype(np.float32))
         d_z1 = cuda.to_device(z1.astype(np.float32))
