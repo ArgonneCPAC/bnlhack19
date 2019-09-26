@@ -313,7 +313,7 @@ def count_weighted_pairs_3d_cuda_transpose_noncuml(
             cuda.atomic.add(result, k, smem[k])
 
 
-@cuda.jit(fastmath=True, max_registers=16)
+@cuda.jit(fastmath=True, max_registers=32)
 def count_weighted_pairs_3d_cuda_transpose2d_smem(
         pt1, pt2, rbins_squared, result):
     """Naively count Npairs(<r), the total number of pairs that are separated
