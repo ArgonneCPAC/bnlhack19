@@ -395,7 +395,7 @@ def count_weighted_pairs_3d_cuda_transpose2d_smem(
 
 
 @cuda.jit(fastmath=True, max_registers=32)
-def count_weighted_pairs_3d_cuda_transpose(
+def count_weighted_pairs_3d_cuda_transpose2d(
         pt1, pt2, rbins_squared, result):
     """Naively count Npairs(<r), the total number of pairs that are separated
     by a distance less than r, for each r**2 in the input rbins_squared.
