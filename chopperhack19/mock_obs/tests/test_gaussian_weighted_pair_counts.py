@@ -9,8 +9,8 @@ from .. import (
     count_weighted_pairs_3d_cpu,
     count_weighted_pairs_3d_cpu_mp,
     count_weighted_pairs_3d_cuda,
-    count_weighted_pairs_3d_cuda_smem,
-    count_weighted_pairs_3d_cpu_corrfunc)
+    count_weighted_pairs_3d_cpu_corrfunc,
+    double_chop_pairs_cuda)
 from .generate_test_data import random_weighted_points
 
 
@@ -47,10 +47,58 @@ def test_accuracy_cpu(func):
     # check if they are the same
     testing.assert_allclose(result_cpu, result_cpu_func)
 
+@pytest.mark.parametrize('func', [
+    double_chop_pairs_cuda])
+def test_accuracy_double_chop(func):
+    # generate mocks
+    n1 = 1000
+    Lbox = 1000.
+    x1, y1, z1, w1 = random_weighted_points(n1, Lbox, seed=DEFAULT_SEED)
+    x2, y2, z2, w2 = random_weighted_points(n1, Lbox, seed=DEFAULT_SEED)
+
+    nbins = 20
+    rmin, rmax = 0.1, 40
+    rbins = np.logspace(
+        np.log10(rmin), np.log10(rmax), nbins).astype(np.float32)
+    rbins_squared = rbins**2
+    result_cpu = np.zeros(nbins-1)
+
+    # double chop the mocks
+    from chopperhack19.mock_obs import chaining_mesh as cm
+    nx = 4
+    ny = 4
+    nz = 4
+    rmax_x = rbins[-1]
+    rmax_y = rbins[-1]
+    rmax_z = rbins[-1]
+    (x1out, y1out, z1out, w1out, cell1out,
+     x2out, y2out, z2out, w2out, indx2) = (
+        cm.get_double_chopped_data(
+            x1, y1, z1, w1, x2, y2, z2, w2, nx, ny, nz, nx, ny, nz,
+            rmax_x, rmax_y, rmax_z, Lbox, Lbox, Lbox))
+    d_x1 = cuda.to_device(x1out)
+    d_y1 = cuda.to_device(y1out)
+    d_z1 = cuda.to_device(z1out)
+    d_w1 = cuda.to_device(w1out)
+    d_cell1out = cuda.to_device(cell1out)
+    d_x2 = cuda.to_device(x2out)
+    d_y2 = cuda.to_device(y2out)
+    d_z2 = cuda.to_device(z2out)
+    d_w2 = cuda.to_device(w2out)
+    d_indx2 = cuda.to_device(indx2)
+
+    d_rbins_squared = cuda.to_device(rbins_squared)
+    d_result = cuda.to_device(result_cpu)
+    count_weighted_pairs_3d_cpu(
+        x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result_cpu)
+    func(d_x1, d_y1, d_z1, d_w1, d_cell1out, d_x2, d_y2, d_z2, d_w2,
+         d_indx2, d_rbins_squared, d_result)
+    result_gpu = d_result.copy_to_host()
+    assert np.allclose(result_cpu, result_gpu, rtol=2e-7, atol=0)
+
 
 @pytest.mark.parametrize('func', [
-    count_weighted_pairs_3d_cuda,
-    count_weighted_pairs_3d_cuda_smem])
+    count_weighted_pairs_3d_cuda])
 def test_accuracy_gpu(func):
     # generate mocks
     n1 = 1000
