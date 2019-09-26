@@ -123,7 +123,7 @@ def count_weighted_pairs_3d_cuda(
             dsq = dx*dx + dy*dy + dz*dz
 
             k = nbins-1
-            while dsq <= rbins_squared[k]:
+            while dsq < rbins_squared[k]:
                 cuda.atomic.add(result, k-1, wprod)
                 k = k-1
                 if k <= 0:
