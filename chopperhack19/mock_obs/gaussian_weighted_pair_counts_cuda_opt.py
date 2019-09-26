@@ -319,42 +319,51 @@ def count_weighted_pairs_3d_cuda_transpose2d_smem(
     """Naively count Npairs(<r), the total number of pairs that are separated
     by a distance less than r, for each r**2 in the input rbins_squared.
     """
-    n1 = pt1.shape[0] // cuda.gridDim.x
-    n2 = pt2.shape[0] // cuda.gridDim.y
+    #  pt1 runs along the x-direction
+    #  pt2 runs along the y-direction
+    #  cuda.gridDim.x = Number of blocks in x-dimension
+    #  cuda.gridDim.y = Number of blocks in y-dimension
+    n1 = pt1.shape[0] // cuda.gridDim.x  #  Number of pt1 points per block
+    n2 = pt2.shape[0] // cuda.gridDim.y  #  Number of pt2 points per block
     nbins = rbins_squared.shape[0]
 
-    loc_1 = cuda.blockIdx.x * n1
-    loc_2 = cuda.blockIdx.y * n2
+    loc_1 = cuda.blockIdx.x * n1  #  Index of the first point in the pt1 block
+    loc_2 = cuda.blockIdx.y * n2  #  Index of the first point in the pt2 block
 
-    chunk_size = 1024  # hard-coded to be the same as block size
-    local_buffer1 = cuda.shared.array((1024, 4), numba.float32)
-    local_buffer2 = cuda.shared.array((1024, 4), numba.float32)
+    chunk_size = 1024  #  Number of points in each chunk - should divide number of threads per block
+    chunk1_buffer = cuda.shared.array((chunk_size, 4), numba.float32)  #  smem for pt1 in the chunk
+    chunk2_buffer = cuda.shared.array((chunk_size, 4), numba.float32)  #  smem for pt2 in the chunk
 
-    n_chunks1 = (n1 + chunk_size - 1) // chunk_size
-    n_chunks2 = (n2 + chunk_size - 1) // chunk_size
+    n_chunks1 = (n1 + chunk_size - 1) // chunk_size  #  Number of chunks needed to loop over all of pt1
+    n_chunks2 = (n2 + chunk_size - 1) // chunk_size  #  Number of chunks needed to loop over all of pt2
 
     for chunk1 in range(n_chunks1):
-        # do load
+        #  loc_1 is the index of the first data point in the block
+        #  Within each block, chunk1 * chunk_size = index of the first data point in the chunk
+        #  Within each chunk, threadIdx.x = index of the data point assigned to the thread
+        #  So jump to the block, then to the chunk, then to the thread
         loc = loc_1 + chunk1 * chunk_size + cuda.threadIdx.x
-        local_buffer1[cuda.threadIdx.x, 0] = pt1[loc, 0]
-        local_buffer1[cuda.threadIdx.x, 1] = pt1[loc, 1]
-        local_buffer1[cuda.threadIdx.x, 2] = pt1[loc, 2]
-        local_buffer1[cuda.threadIdx.x, 3] = pt1[loc, 3]
-        cuda.syncthreads()
+        chunk1_buffer[cuda.threadIdx.x, 0] = pt1[loc, 0]
+        chunk1_buffer[cuda.threadIdx.x, 1] = pt1[loc, 1]
+        chunk1_buffer[cuda.threadIdx.x, 2] = pt1[loc, 2]
+        chunk1_buffer[cuda.threadIdx.x, 3] = pt1[loc, 3]
+        cuda.syncthreads()  #  Syncs all threads in the block (not actually necessary)
 
         for chunk2 in range(n_chunks2):
-            # do load
+            #  Same gymnastics for the pt2 data
             loc = loc_2 + chunk2 * chunk_size + cuda.threadIdx.x
-            local_buffer2[cuda.threadIdx.x, 0] = pt2[loc, 0]
-            local_buffer2[cuda.threadIdx.x, 1] = pt2[loc, 1]
-            local_buffer2[cuda.threadIdx.x, 2] = pt2[loc, 2]
-            local_buffer2[cuda.threadIdx.x, 3] = pt2[loc, 3]
-            cuda.syncthreads()
+            chunk2_buffer[cuda.threadIdx.x, 0] = pt2[loc, 0]
+            chunk2_buffer[cuda.threadIdx.x, 1] = pt2[loc, 1]
+            chunk2_buffer[cuda.threadIdx.x, 2] = pt2[loc, 2]
+            chunk2_buffer[cuda.threadIdx.x, 3] = pt2[loc, 3]
+            cuda.syncthreads()  #  Syncs all threads in the block (critical)
 
-            # let the threads each handle one thing
-            px, py, pz, pw = local_buffer1[cuda.threadIdx.x]
+            #  Grab the pt1 point that belongs to the thread
+            px, py, pz, pw = chunk1_buffer[cuda.threadIdx.x]
+
+            #  Loop over every pt2 point that belongs to the thread
             for q in range(chunk_size):
-                qx, qy, qz, qw = local_buffer2[q]
+                qx, qy, qz, qw = chunk2_buffer[q]
 
                 dx = px-qx
                 dy = py-qy
