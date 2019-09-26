@@ -11,7 +11,8 @@ __all__ = (  # noqa
     # 'count_weighted_pairs_3d_cuda_revchop_noncuml',
     'count_weighted_pairs_3d_cuda_noncuml_pairsonly',
     'count_weighted_pairs_3d_cuda_noncuml',
-    'count_weighted_pairs_3d_cuda_smemload_noncuml_pairsonly')
+    'count_weighted_pairs_3d_cuda_smemload_noncuml_pairsonly',
+    'count_weighted_pairs_3d_cuda_transpose_2d_smem')
 
 
 @cuda.jit(fastmath=True)
@@ -310,3 +311,62 @@ def count_weighted_pairs_3d_cuda_transpose_noncuml(
     if cuda.threadIdx.x == 0:
         for k in range(nbins):
             cuda.atomic.add(result, k, smem[k])
+
+
+@cuda.jit(fastmath=True)
+def count_weighted_pairs_3d_cuda_transpose_2d_smem(
+        pt1, pt2, rbins_squared, result):
+    """Naively count Npairs(<r), the total number of pairs that are separated
+    by a distance less than r, for each r**2 in the input rbins_squared.
+    """
+    n1 = pt1.shape[0] // cuda.gridDim.x
+    n2 = pt2.shape[0] // cuda.gridDim.y
+    nbins = rbins_squared.shape[0]
+
+    loc_1 = cuda.blockIdx.x * n1
+    loc_2 = cuda.blockIdx.y * n2
+
+    chunk_size = 512  # hard-coded to be the same as block size
+    local_buffer1 = cuda.shared.array((chunk_size, 4), numba.float32)
+    local_buffer2 = cuda.shared.array((chunk_size, 4), numba.float32)
+
+    n_chunks1 = (n1 + chunk_size - 1) // chunk_size
+    n_chunks2 = (n2 + chunk_size - 1) // chunk_size
+
+    for chunk1 in range(n_chunks1):
+        # do load
+        loc = loc_1 + chunk1 * chunk_size + cuda.threadIdx.x
+        local_buffer1[cuda.threadIdx.x, 0] = pt1[loc, 0]
+        local_buffer1[cuda.threadIdx.x, 1] = pt1[loc, 1]
+        local_buffer1[cuda.threadIdx.x, 2] = pt1[loc, 2]
+        local_buffer1[cuda.threadIdx.x, 3] = pt1[loc, 3]
+        cuda.syncthreads()
+
+        for chunk2 in range(n_chunks2):
+            # do load
+            loc = loc_2 + chunk2 * chunk_size + cuda.threadIdx.y
+            local_buffer2[cuda.threadIdx.x, 0] = pt2[loc, 0]
+            local_buffer2[cuda.threadIdx.x, 1] = pt2[loc, 1]
+            local_buffer2[cuda.threadIdx.x, 2] = pt2[loc, 2]
+            local_buffer2[cuda.threadIdx.x, 3] = pt2[loc, 3]
+            cuda.syncthreads()
+
+            # do double loop over chunk data
+            for q1 in range(chunk_size):
+                px, py, pz, pw = local_buffer1[q1]
+
+                for q2 in range(chunk_size):
+                    qx, qy, qz, qw = local_buffer2[q2]
+
+                    dx = px-qx
+                    dy = py-qy
+                    dz = pz-qz
+                    wprod = pw*qw
+                    dsq = dx*dx + dy*dy + dz*dz
+
+                    k = nbins-1
+                    while dsq <= rbins_squared[k]:
+                        cuda.atomic.add(result, k-1, wprod)
+                        k = k-1
+                        if k <= 0:
+                            break
