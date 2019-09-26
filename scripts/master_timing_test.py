@@ -88,7 +88,8 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
             ptswts2[:, 3] = w2out
 
             func[blocks, threads](
-                ptswts1, cell1out, ptswts2, indx2, DEFAULT_RBINS_SQUARED, result)
+                ptswts1, cell1out, ptswts2, indx2,
+                DEFAULT_RBINS_SQUARED, result)
         elif 'double_chop' in func_str:
             from chopperhack19.mock_obs import chaining_mesh as cm
             nx1 = nmesh1
@@ -371,9 +372,10 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
                 d_rbins_squared, d_result)
         end = time()
         runtime = (end-start)/3
+        results_host = d_result
 
     print('time:', runtime)
-    print('result:', result)
+    print('result:', results_host)
 
 
 if __name__ == '__main__':
