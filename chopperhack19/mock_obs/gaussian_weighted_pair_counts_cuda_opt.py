@@ -12,7 +12,8 @@ __all__ = (  # noqa
     'count_weighted_pairs_3d_cuda_noncuml_pairsonly',
     'count_weighted_pairs_3d_cuda_noncuml',
     'count_weighted_pairs_3d_cuda_smemload_noncuml_pairsonly',
-    'count_weighted_pairs_3d_cuda_transpose2d_smem')
+    'count_weighted_pairs_3d_cuda_transpose2d_smem',
+    'count_weighted_pairs_3d_cuda_transpose')
 
 
 @cuda.jit(fastmath=True)
@@ -391,3 +392,36 @@ def count_weighted_pairs_3d_cuda_transpose2d_smem(
                             k = k-1
                             if k <= 0:
                                 break
+
+
+@cuda.jit(fastmath=True, max_registers=32)
+def count_weighted_pairs_3d_cuda_transpose(
+        pt1, pt2, rbins_squared, result):
+    """Naively count Npairs(<r), the total number of pairs that are separated
+    by a distance less than r, for each r**2 in the input rbins_squared.
+    """
+    n1 = pt1.shape[0]
+    n2 = pt2.shape[0]
+    nbins = rbins_squared.shape[0]
+
+    start = cuda.grid(1)
+    stride = cuda.gridsize(1)
+
+    for i in range(start, n1, stride):
+        px, py, pz, pw = pt1[i]
+
+        for j in range(n2):
+            qx, qy, qz, qw = pt2[j]
+
+            dx = px-qx
+            dy = py-qy
+            dz = pz-qz
+            wprod = pw*qw
+            dsq = dx*dx + dy*dy + dz*dz
+
+            k = nbins-1
+            while dsq <= rbins_squared[k]:
+                cuda.atomic.add(result, k-1, wprod)
+                k = k-1
+                if k <= 0:
+                    break
