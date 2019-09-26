@@ -13,7 +13,7 @@ __all__ = (  # noqa
     'count_weighted_pairs_3d_cuda_noncuml',
     'count_weighted_pairs_3d_cuda_smemload_noncuml_pairsonly',
     'count_weighted_pairs_3d_cuda_transpose2d_smem',
-    'count_weighted_pairs_3d_cuda_transpose')
+    'count_weighted_pairs_3d_cuda_transpose2d')
 
 
 @cuda.jit(fastmath=True)
