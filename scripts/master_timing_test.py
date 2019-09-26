@@ -109,16 +109,16 @@ def _main(func, blocks, threads, npoints):
             x2out, y2out, z2out, w2out, indx2,
             DEFAULT_RBINS_SQUARED, result)
     elif 'cuda_transpose2d' in func_str:
-        ptswts1 = np.empty((x1out.size, 4), dtype=np.float32)
-        ptswts1[:, 0] = x1out
-        ptswts1[:, 1] = y1out
-        ptswts1[:, 2] = z1out
-        ptswts1[:, 3] = w1out
-        ptswts2 = np.empty((x2out.size, 4), dtype=np.float32)
-        ptswts2[:, 0] = x2out
-        ptswts2[:, 1] = y2out
-        ptswts2[:, 2] = z2out
-        ptswts2[:, 3] = w2out
+        ptswts1 = np.empty((_x1.size, 4), dtype=np.float32)
+        ptswts1[:, 0] = _x1
+        ptswts1[:, 1] = _y1
+        ptswts1[:, 2] = _z1
+        ptswts1[:, 3] = _w1
+        ptswts2 = np.empty((_x2.size, 4), dtype=np.float32)
+        ptswts2[:, 0] = _x2
+        ptswts2[:, 1] = _y2
+        ptswts2[:, 2] = _z2
+        ptswts2[:, 3] = _w2
 
         func[(blocks, blocks), (32, 32)](
             ptswts1, ptswts2, DEFAULT_RBINS_SQUARED, result)
@@ -276,16 +276,16 @@ def _main(func, blocks, threads, npoints):
         end = time()
         runtime = (end-start)/3
     elif 'cuda_transpose2d' in func_str:
-        ptswts1 = np.empty((x1out.size, 4), dtype=np.float32)
-        ptswts1[:, 0] = x1out
-        ptswts1[:, 1] = y1out
-        ptswts1[:, 2] = z1out
-        ptswts1[:, 3] = w1out
-        ptswts2 = np.empty((x2out.size, 4), dtype=np.float32)
-        ptswts2[:, 0] = x2out
-        ptswts2[:, 1] = y2out
-        ptswts2[:, 2] = z2out
-        ptswts2[:, 3] = w2out
+        ptswts1 = np.empty((x1.size, 4), dtype=np.float32)
+        ptswts1[:, 0] = x1
+        ptswts1[:, 1] = y1
+        ptswts1[:, 2] = z1
+        ptswts1[:, 3] = w1
+        ptswts2 = np.empty((x2.size, 4), dtype=np.float32)
+        ptswts2[:, 0] = x2
+        ptswts2[:, 1] = y2
+        ptswts2[:, 2] = z2
+        ptswts2[:, 3] = w2
 
         d_ptswts1 = cuda.to_device(ptswts1)
         d_ptswts2 = cuda.to_device(ptswts2)
