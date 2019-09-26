@@ -7,6 +7,7 @@ from chopperhack19.mock_obs.tests.generate_test_data import (
     DEFAULT_RBINS_SQUARED)
 from time import time
 
+
 @click.command()
 @click.option('--func', default='count_weighted_pairs_3d_cpu',
               help='the function to run')
@@ -15,7 +16,6 @@ from time import time
 @click.option('--npoints', default=200013)
 @click.option('--nmesh1', default=4)
 @click.option('--nmesh2', default=16)
-
 def _main(func, blocks, threads, npoints, nmesh1, nmesh2):
 
     func_str = func
@@ -123,7 +123,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2):
         ptswts2[:, 2] = _z2
         ptswts2[:, 3] = _w2
 
-        func[(blocks, blocks), (32, 32)](
+        func[(blocks, blocks), 512](
             ptswts1, ptswts2, DEFAULT_RBINS_SQUARED, result)
     elif 'cuda_transpose' in func_str:
         ptswts1 = np.stack(
@@ -299,7 +299,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2):
 
         start = time()
         for _ in range(3):
-            func[(blocks, blocks), (32, 32)](
+            func[(blocks, blocks), 512](
                 d_ptswts1, d_ptswts2, d_rbins_squared, d_result)
             results_host = d_result.copy_to_host()
         end = time()
