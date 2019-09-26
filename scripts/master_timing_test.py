@@ -175,7 +175,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
 
         d_rbins_squared = cuda.to_device(
             DEFAULT_RBINS_SQUARED.astype(np.float32))
-        d_result = cuda.device_array_like(result)
+        d_result = cuda.device_array_like(result.astype(np.float64))
         d_ndiv = cuda.to_device(np.array([nmesh1]*3, dtype=np.int32))
         d_cell_id_indices = cuda.to_device(cell_id_indices)
         d_cell_id2_indices = cuda.to_device(cell_id2_indices)
@@ -231,7 +231,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
 
         d_rbins_squared = cuda.to_device(
             DEFAULT_RBINS_SQUARED.astype(np.float32))
-        d_result = cuda.device_array_like(result)
+        d_result = cuda.device_array_like(result.astype(np.float64))
 
         start = time()
         for _ in range(3):
@@ -274,7 +274,8 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
         d_indx2 = cuda.to_device(indx2.astype(np.int32))
         d_rbins_squared = cuda.to_device(
             DEFAULT_RBINS_SQUARED.astype(np.float32))
-        d_result = cuda.device_array_like(result)
+        d_result = cuda.device_array_like(result.astype(np.float64))
+
         start = time()
         for _ in range(3):
             func[blocks, threads](
@@ -303,7 +304,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
 
         d_rbins_squared = cuda.to_device(
             DEFAULT_RBINS_SQUARED.astype(np.float32))
-        d_result = cuda.device_array_like(result)
+        d_result = cuda.device_array_like(result.astype(np.float64))
 
         start = time()
         for _ in range(3):
@@ -324,7 +325,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
 
         d_rbins_squared = cuda.to_device(
             DEFAULT_RBINS_SQUARED.astype(np.float32))
-        d_result = cuda.device_array_like(result)
+        d_result = cuda.device_array_like(result.astype(np.float64))
 
         start = time()
         for _ in range(3):
@@ -349,7 +350,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
 
         d_rbins_squared = cuda.to_device(
             DEFAULT_RBINS_SQUARED.astype(np.float32))
-        d_result = cuda.device_array_like(result)
+        d_result = cuda.device_array_like(result.astype(np.float64))
 
         start = time()
         for _ in range(3):
