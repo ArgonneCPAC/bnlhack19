@@ -114,7 +114,7 @@ def _main(func, blocks, threads, npoints):
         ptswts2 = np.stack(
             [_x2, _y2, _z2, _w2], axis=1).ravel().astype(np.float32)
 
-        func[(blocks, blocks), 512](
+        func[(blocks, blocks), (32, 32)](
             ptswts1, ptswts2, DEFAULT_RBINS_SQUARED, result)
     elif 'cuda_transpose' in func_str:
         ptswts1 = np.stack(
@@ -282,7 +282,7 @@ def _main(func, blocks, threads, npoints):
 
         start = time()
         for _ in range(3):
-            func[(blocks, blocks), 512](
+            func[(blocks, blocks), (32, 32)](
                 d_ptswts1, d_ptswts2, d_rbins_squared, d_result)
             results_host = d_result.copy_to_host()
         end = time()
