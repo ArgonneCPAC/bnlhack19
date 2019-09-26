@@ -10,6 +10,7 @@ from .. import (
     count_weighted_pairs_3d_cpu_mp,
     count_weighted_pairs_3d_cuda,
     count_weighted_pairs_3d_cpu_corrfunc,
+    count_weighted_pairs_3d_cuda_transpose2d_smem,
     double_chop_pairs_cuda)
 from .generate_test_data import random_weighted_points
 
@@ -45,7 +46,44 @@ def test_accuracy_cpu(func):
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result_cpu)
 
     # check if they are the same
-    testing.assert_allclose(result_cpu, result_cpu_func)
+    assert np.allclose(result_cpu, result_gpu, rtol=2e-7, atol=0)
+
+@pytest.mark.parametrize('func', [
+    count_weighted_pairs_3d_cuda_transpose2d_smem])
+def test_accuracy_transpose(func):
+    n1 = 1024
+    Lbox = 1000.
+    x1, y1, z1, w1 = random_weighted_points(n1, Lbox, seed=DEFAULT_SEED)
+    x2, y2, z2, w2 = random_weighted_points(n1, Lbox, seed=DEFAULT_SEED+1)
+
+    nbins = 20
+    rmin, rmax = 0.1, 40
+    rbins = np.logspace(
+        np.log10(rmin), np.log10(rmax), nbins).astype(np.float32)
+    rbins_squared = rbins**2
+    result_cpu = np.zeros(nbins-1)
+
+    ptswts1 = np.empty((x1.size, 4), dtype=np.float32)
+    ptswts1[:, 0] = x1
+    ptswts1[:, 1] = y1
+    ptswts1[:, 2] = z1
+    ptswts1[:, 3] = w1
+    ptswts2 = np.empty((x2.size, 4), dtype=np.float32)
+    ptswts2[:, 0] = x2
+    ptswts2[:, 1] = y2
+    ptswts2[:, 2] = z2
+    ptswts2[:, 3] = w2
+
+    d_ptswts1 = cuda.to_device(ptswts1)
+    d_ptswts2 = cuda.to_device(ptswts2)
+    d_rbins_squared = cuda.to_device(rbins_squared)
+    d_result = cuda.to_device(result_cpu)
+
+    count_weighted_pairs_3d_cpu(
+        x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result_cpu)
+    func[(512,512),512](d_ptswts1, d_ptswts2, d_rbins_squared, d_result)
+    result_gpu = d_result.copy_to_host()
+    assert np.allclose(result_cpu, result_gpu, rtol=2e-7, atol=0)
 
 @pytest.mark.parametrize('func', [
     double_chop_pairs_cuda])
@@ -54,7 +92,7 @@ def test_accuracy_double_chop(func):
     n1 = 1000
     Lbox = 1000.
     x1, y1, z1, w1 = random_weighted_points(n1, Lbox, seed=DEFAULT_SEED)
-    x2, y2, z2, w2 = random_weighted_points(n1, Lbox, seed=DEFAULT_SEED)
+    x2, y2, z2, w2 = random_weighted_points(n1, Lbox, seed=DEFAULT_SEED+1)
 
     nbins = 20
     rmin, rmax = 0.1, 40
