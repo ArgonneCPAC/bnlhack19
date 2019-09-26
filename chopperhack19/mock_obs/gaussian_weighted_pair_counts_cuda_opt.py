@@ -340,7 +340,6 @@ def count_weighted_pairs_3d_cuda_transpose2d_smem(
         local_buffer1[cuda.threadIdx.x, 1] = pt1[loc, 1]
         local_buffer1[cuda.threadIdx.x, 2] = pt1[loc, 2]
         local_buffer1[cuda.threadIdx.x, 3] = pt1[loc, 3]
-        cuda.syncthreads()
 
         for chunk2 in range(n_chunks2):
             # do load
