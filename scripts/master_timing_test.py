@@ -382,7 +382,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
 
     print('time:', runtime)
     print('correct (only true for cumulative bins):', correct)
-    print('result:', results_host)
+    print('result:', results_host/3)
     print('result (corrfunc):', result_test)
 
 
