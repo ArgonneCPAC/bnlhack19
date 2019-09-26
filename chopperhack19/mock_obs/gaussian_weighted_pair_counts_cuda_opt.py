@@ -323,8 +323,8 @@ def count_weighted_pairs_3d_cuda_transpose_2d_smem(
     n2 = pt2.shape[0] // cuda.gridDim.y
     nbins = rbins_squared.shape[0]
 
-    loc_1 = cuda.blockIdx.x * n1
-    loc_2 = cuda.blockIdx.y * n2
+    loc_1 = numba.int32(cuda.blockIdx.x * n1)
+    loc_2 = numba.int32(cuda.blockIdx.y * n2)
 
     chunk_size = 512  # hard-coded to be the same as block size
     local_buffer1 = cuda.shared.array((chunk_size, 4), numba.float32)
