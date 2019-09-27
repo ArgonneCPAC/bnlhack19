@@ -588,12 +588,12 @@ def count_weighted_pairs_3d_cuda_noncuml(
 @cuda.jit(fastmath=True, max_registers=32)
 def count_weighted_pairs_3d_cuda2d_smem(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
-    n1 = x1.shape[0] // cuda.gridDim.x
-    n2 = x2.shape[0] // cuda.gridDim.y
+    dn1 = x1.shape[0] // cuda.gridDim.x
+    dn2 = x2.shape[0] // cuda.gridDim.y
     nbins = rbins_squared.shape[0]
 
-    loc_1 = cuda.blockIdx.x * n1
-    loc_2 = cuda.blockIdx.y * n2
+    loc_1 = cuda.blockIdx.x * dn1
+    loc_2 = cuda.blockIdx.y * dn2
 
     chunk_size = 8
     local_buffer1 = cuda.shared.array((chunk_size, 4), numba.float32)
@@ -609,8 +609,8 @@ def count_weighted_pairs_3d_cuda2d_smem(
 
         ploc = loc_2 + tloc
         local_buffer2[tloc, 0] = x2[ploc]
-        local_buffer2[tloc, 1] = z2[ploc]
-        local_buffer2[tloc, 2] = y2[ploc]
+        local_buffer2[tloc, 1] = y2[ploc]
+        local_buffer2[tloc, 2] = z2[ploc]
         local_buffer2[tloc, 3] = w2[ploc]
 
     cuda.syncthreads()
