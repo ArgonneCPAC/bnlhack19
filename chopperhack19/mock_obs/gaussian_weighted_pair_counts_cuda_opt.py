@@ -15,7 +15,8 @@ __all__ = (  # noqa
     'count_weighted_pairs_3d_cuda_transpose2d_smem',
     'count_weighted_pairs_3d_cuda_transpose2d',
     'count_weighted_pairs_3d_cuda_smem',
-    'count_weighted_pairs_3d_cuda_extrabins')
+    'count_weighted_pairs_3d_cuda_extrabins',
+    'count_weighted_pairs_3d_cuda_transpose2d_smem_blocksonly')
 
 
 # @cuda.jit(fastmath=True)
@@ -582,3 +583,53 @@ def count_weighted_pairs_3d_cuda_noncuml(
             k = int((math.log(dsq)/2 - minlogr) / dlogr)
             if k >= 0 and k < nbins:
                 cuda.atomic.add(result, k, wprod)
+
+
+@cuda.jit(fastmath=True, max_registers=32)
+def count_weighted_pairs_3d_cuda_transpose2d_smem_blocksonly(
+        pt1, pt2, rbins_squared, result):
+    """Naively count Npairs(<r), the total number of pairs that are separated
+    by a distance less than r, for each r**2 in the input rbins_squared.
+    """
+    n1 = pt1.shape[0] // cuda.gridDim.x
+    n2 = pt2.shape[0] // cuda.gridDim.y
+    nbins = rbins_squared.shape[0]
+
+    loc_1 = cuda.blockIdx.x * n1
+    loc_2 = cuda.blockIdx.y * n2
+
+    chunk_size = 128
+    local_buffer1 = cuda.shared.array((chunk_size, 4), numba.float32)
+    local_buffer2 = cuda.shared.array((chunk_size, 4), numba.float32)
+
+    ploc = loc_1 + cuda.threadIdx.x
+    local_buffer1[cuda.threadIdx.x, 0] = pt1[ploc, 0]
+    local_buffer1[cuda.threadIdx.x, 1] = pt1[ploc, 1]
+    local_buffer1[cuda.threadIdx.x, 2] = pt1[ploc, 2]
+    local_buffer1[cuda.threadIdx.x, 3] = pt1[ploc, 3]
+
+    ploc = loc_2 + cuda.threadIdx.x
+    local_buffer2[cuda.threadIdx.x, 0] = pt2[ploc, 0]
+    local_buffer2[cuda.threadIdx.x, 1] = pt2[ploc, 1]
+    local_buffer2[cuda.threadIdx.x, 2] = pt2[ploc, 2]
+    local_buffer2[cuda.threadIdx.x, 3] = pt2[ploc, 3]
+
+    cuda.syncthreads()
+
+    px, py, pz, pw = local_buffer1[cuda.threadIdx.x]
+
+    for q in range(chunk_size):
+        qx, qy, qz, qw = local_buffer2[q]
+
+        dx = px-qx
+        dy = py-qy
+        dz = pz-qz
+        wprod = pw*qw
+        dsq = dx*dx + dy*dy + dz*dz
+
+        k = nbins-1
+        while dsq <= rbins_squared[k]:
+            cuda.atomic.add(result, k-1, wprod)
+            k = k-1
+            if k <= 0:
+                break
