@@ -607,13 +607,11 @@ def count_weighted_pairs_3d_cuda2d_smem(
         local_buffer1[tloc, 2] = z1[ploc]
         local_buffer1[tloc, 3] = w1[ploc]
 
-    if tloc >= chunk_size and tloc < chunk_size * 2:
-        _tloc = tloc - chunk_size
-        ploc = loc_2 + _tloc
-        local_buffer2[_tloc, 0] = x2[ploc]
-        local_buffer2[_tloc, 1] = z2[ploc]
-        local_buffer2[_tloc, 2] = y2[ploc]
-        local_buffer2[_tloc, 3] = w2[ploc]
+        ploc = loc_2 + tloc
+        local_buffer2[tloc, 0] = x2[ploc]
+        local_buffer2[tloc, 1] = z2[ploc]
+        local_buffer2[tloc, 2] = y2[ploc]
+        local_buffer2[tloc, 3] = w2[ploc]
 
     cuda.syncthreads()
 
