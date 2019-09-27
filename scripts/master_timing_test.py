@@ -285,8 +285,9 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
             DEFAULT_RBINS_SQUARED.astype(np.float32))
         d_result = cuda.device_array_like(result.astype(np.float64))
 
-        start = time()
-        for _ in range(3):
+        for i in range(4):
+            if i == 1:
+                start = time()
             func[blocks, threads](
                 d_x1, d_y1, d_z1, d_w1, d_cell1out,
                 d_x2, d_y2, d_z2, d_w2, d_indx2,
