@@ -137,7 +137,6 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
             func[blocks, threads](
                 ptswts1, ptswts2, DEFAULT_RBINS_SQUARED, result)
         elif 'cuda' in func_str:
-            print('called')
             func[blocks, threads](
                 _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
                 DEFAULT_RBINS_SQUARED, result)
@@ -339,6 +338,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
 
         results_host /= 3
     elif 'cuda' in func_str:
+        print('called')
         d_x1 = cuda.to_device(x1.astype(np.float32))
         d_y1 = cuda.to_device(y1.astype(np.float32))
         d_z1 = cuda.to_device(z1.astype(np.float32))
