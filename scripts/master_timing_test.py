@@ -136,6 +136,15 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
 
             func[blocks, threads](
                 ptswts1, ptswts2, DEFAULT_RBINS_SQUARED, result)
+        elif 'cuda_extrabins' in func_str:
+            new_rbins = np.concatenate(
+                [np.array(DEFAULT_RBINS_SQUARED[0]/2),
+                 DEFAULT_RBINS_SQUARED,
+                 np.array(DEFAULT_RBINS_SQUARED[-1]/2)]).astype(np.float32)
+            new_result = np.zeros(result.shape[0]+2)
+            func[blocks, threads](
+                _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
+                new_rbins, new_result)
         elif 'cuda' in func_str:
             func[blocks, threads](
                 _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
@@ -337,6 +346,40 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
         runtime = (end-start)/3
 
         results_host /= 3
+    elif 'cuda_transpose' in func_str:
+        d_x1 = cuda.to_device(x1.astype(np.float32))
+        d_y1 = cuda.to_device(y1.astype(np.float32))
+        d_z1 = cuda.to_device(z1.astype(np.float32))
+        d_w1 = cuda.to_device(w1.astype(np.float32))
+
+        d_x2 = cuda.to_device(x2.astype(np.float32))
+        d_y2 = cuda.to_device(y2.astype(np.float32))
+        d_z2 = cuda.to_device(z2.astype(np.float32))
+        d_w2 = cuda.to_device(w2.astype(np.float32))
+
+        new_rbins = np.concatenate(
+            [np.array(DEFAULT_RBINS_SQUARED[0]/2),
+             DEFAULT_RBINS_SQUARED,
+             np.array(DEFAULT_RBINS_SQUARED[-1]/2)]).astype(np.float32)
+        new_result = np.zeros(result.shape[0]+2)
+
+        d_rbins_squared = cuda.to_device(
+            new_rbins.astype(np.float32))
+        d_result = cuda.device_array_like(new_result.astype(np.float64))
+
+        start = time()
+        for _ in range(3):
+            func[blocks, threads](
+                d_x1, d_y1, d_z1, d_w1, d_x2, d_y2, d_z2, d_w2,
+                d_rbins_squared, d_result)
+            results_host = d_result.copy_to_host()
+        end = time()
+        assert np.all(np.isfinite(results_host))
+        runtime = (end-start)/3
+
+        results_host /= 3
+        results_host = results_host[1:-1]
+
     elif 'cuda' in func_str:
         d_x1 = cuda.to_device(x1.astype(np.float32))
         d_y1 = cuda.to_device(y1.astype(np.float32))
