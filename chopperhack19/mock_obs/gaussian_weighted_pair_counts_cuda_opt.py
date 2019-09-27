@@ -430,7 +430,7 @@ def count_weighted_pairs_3d_cuda_transpose2d(
                     break
 
 
-@cuda.jit(fastmath=True)  # , max_registers=32)
+@cuda.jit(fastmath=True)
 def count_weighted_pairs_3d_cuda_smem(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
     """Naively count Npairs(<r), the total number of pairs that are separated
@@ -458,7 +458,7 @@ def count_weighted_pairs_3d_cuda_smem(
 
         for chunk in range(n_chunks-1):
             for load in range(n_loads):
-                tloc = n_loads * cuda.threadIdx.x + load
+                tloc = load * cuda.blockDim.x + cuda.threadIdx.x
                 if tloc < chunk_size:
                     ploc = chunk * chunk_size + tloc
                     buff[tloc, 0] = x2[ploc]
@@ -485,7 +485,7 @@ def count_weighted_pairs_3d_cuda_smem(
 
         last_chunk = n2 - (n_chunks-1) * chunk_size
         for load in range(n_loads):
-            tloc = n_loads * cuda.threadIdx.x + load
+            tloc = load * cuda.blockDim.x + cuda.threadIdx.x
             if tloc < last_chunk:
                 ploc = chunk * chunk_size + tloc
                 buff[tloc, 0] = x2[ploc]
