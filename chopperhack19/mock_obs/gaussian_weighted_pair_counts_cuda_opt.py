@@ -544,4 +544,4 @@ def count_weighted_pairs_3d_cuda_extrabins(
 
             k = int((math.log(dsq)/2 - minlogr) / dlogr)
             k = min(max(k, 0), nbins_minus1)
-            cuda.atomic.add(result, k, wprod)
+            cuda.atomic.add(result, k+1, wprod)
