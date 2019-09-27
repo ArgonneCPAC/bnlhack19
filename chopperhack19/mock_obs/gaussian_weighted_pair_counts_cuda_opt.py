@@ -18,28 +18,28 @@ __all__ = (  # noqa
     'count_weighted_pairs_3d_cuda_extrabins')
 
 
-@cuda.jit(fastmath=True)
-def count_weighted_pairs_3d_cuda_noncuml(
-        x1, y1, z1, w1, x2, y2, z2, w2, _rbins_squared, result):
-    start = cuda.grid(1)
-    stride = cuda.gridsize(1)
-
-    n1 = x1.shape[0]
-    n2 = x2.shape[0]
-    nbins = _rbins_squared.shape[0]-1
-    dlogr = math.log(_rbins_squared[1] / _rbins_squared[0]) / 2
-    logminr = math.log(_rbins_squared[0]) / 2
-
-    for i in range(start, n1, stride):
-        for j in range(n2):
-            dx = x1[i] - x2[j]
-            dy = y1[i] - y2[j]
-            dz = z1[i] - z2[j]
-            dsq = cuda.fma(dx, dx, cuda.fma(dy, dy, dz * dz))
-
-            k = int((math.log(dsq)/2 - logminr) / dlogr)
-            if k >= 0 and k < nbins:
-                cuda.atomic.add(result, k, w1[i] * w2[j])
+# @cuda.jit(fastmath=True)
+# def count_weighted_pairs_3d_cuda_noncuml(
+#         x1, y1, z1, w1, x2, y2, z2, w2, _rbins_squared, result):
+#     start = cuda.grid(1)
+#     stride = cuda.gridsize(1)
+#
+#     n1 = x1.shape[0]
+#     n2 = x2.shape[0]
+#     nbins = _rbins_squared.shape[0]-1
+#     dlogr = math.log(_rbins_squared[1] / _rbins_squared[0]) / 2
+#     logminr = math.log(_rbins_squared[0]) / 2
+#
+#     for i in range(start, n1, stride):
+#         for j in range(n2):
+#             dx = x1[i] - x2[j]
+#             dy = y1[i] - y2[j]
+#             dz = z1[i] - z2[j]
+#             dsq = cuda.fma(dx, dx, cuda.fma(dy, dy, dz * dz))
+#
+#             k = int((math.log(dsq)/2 - logminr) / dlogr)
+#             if k >= 0 and k < nbins:
+#                 cuda.atomic.add(result, k, w1[i] * w2[j])
 
 
 @cuda.jit(fastmath=True)
@@ -545,3 +545,40 @@ def count_weighted_pairs_3d_cuda_extrabins(
             k = int((math.log(dsq)/2 - minlogr) / dlogr)
             k = min(max(k, 0), nbins_minus1)
             cuda.atomic.add(result, k+1, wprod)
+
+
+@cuda.jit
+def count_weighted_pairs_3d_cuda_noncuml(
+        x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
+    """Naively count Npairs(<r), the total number of pairs that are separated
+    by a distance less than r, for each r**2 in the input rbins_squared.
+    """
+    start = cuda.grid(1)
+    stride = cuda.gridsize(1)
+
+    n1 = x1.shape[0]
+    n2 = x2.shape[0]
+    nbins = rbins_squared.shape[0] - 1
+
+    dlogr = math.log(rbins_squared[1]/rbins_squared[0])/2
+    minlogr = math.log(rbins_squared[0])/2
+
+    for i in range(start, n1, stride):
+        px = x1[i]
+        py = y1[i]
+        pz = z1[i]
+        pw = w1[i]
+        for j in range(n2):
+            qx = x2[j]
+            qy = y2[j]
+            qz = z2[j]
+            qw = w2[j]
+            dx = px-qx
+            dy = py-qy
+            dz = pz-qz
+            wprod = pw*qw
+            dsq = dx*dx + dy*dy + dz*dz
+
+            k = int((math.log(dsq)/2 - minlogr) / dlogr)
+            if k >= 0 and k < nbins:
+                cuda.atomic.add(result, k, wprod)
