@@ -85,9 +85,8 @@ def _main(func, blocks, threads, npoints):
 
     print('time:', runtime)
     print('correct (only valid for cumulative counts):', correct)
-    if not correct:
-        print('result           :', results_host)
-        print('result (corrfunc):', result_test)
+    print('result           :', results_host)
+    print('result (corrfunc):', result_test)
 
 
 if __name__ == '__main__':
