@@ -39,6 +39,8 @@ def _main(func, blocks, threads, npoints):
     x1, y1, z1, w1 = random_weighted_points(n1, Lbox, 0)
     x2, y2, z2, w2 = random_weighted_points(n2, Lbox, 1)
     if 'cuda2d' in func_str:
+        assert blocks * threads == n1
+        assert blocks * threads == n2
         blocks = (blocks, blocks)
         threads = (threads, threads)
 
