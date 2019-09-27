@@ -13,7 +13,8 @@ __all__ = (  # noqa
     'count_weighted_pairs_3d_cuda_noncuml',
     'count_weighted_pairs_3d_cuda_smemload_noncuml_pairsonly',
     'count_weighted_pairs_3d_cuda_transpose2d_smem',
-    'count_weighted_pairs_3d_cuda_transpose2d')
+    'count_weighted_pairs_3d_cuda_transpose2d',
+    'count_weighted_pairs_3d_cuda_smem')
 
 
 @cuda.jit(fastmath=True)
@@ -412,6 +413,87 @@ def count_weighted_pairs_3d_cuda_transpose2d(
 
         for j in range(n2):
             qx, qy, qz, qw = pt2[j]
+
+            dx = px-qx
+            dy = py-qy
+            dz = pz-qz
+            wprod = pw*qw
+            dsq = dx*dx + dy*dy + dz*dz
+
+            k = nbins-1
+            while dsq <= rbins_squared[k]:
+                cuda.atomic.add(result, k-1, wprod)
+                k = k-1
+                if k <= 0:
+                    break
+
+
+@cuda.jit(fastmath=True, max_registers=32)
+def count_weighted_pairs_3d_cuda_smem(
+        x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
+    """Naively count Npairs(<r), the total number of pairs that are separated
+    by a distance less than r, for each r**2 in the input rbins_squared.
+    """
+    n1 = x1.shape[0]
+    n2 = x2.shape[0]
+    nbins = rbins_squared.shape[0]
+
+    start = cuda.grid(1)
+    stride = cuda.gridsize(1)
+
+    chunk_size = 64
+    buff = cuda.shared.array((chunk_size, 4), numba.float32)
+
+    n_loads = (chunk_size + cuda.blockDim.x - 1) // cuda.blockDim.x
+
+    n_chunks = (n2 + chunk_size - 1) // chunk_size
+
+    for i in range(start, n1, stride):
+        px = x1[i]
+        py = y1[i]
+        pz = z1[i]
+        pw = w1[i]
+
+        for chunk in range(n_chunks-1):
+            for load in range(n_loads):
+                tloc = n_loads * cuda.threadIdx.x + load
+                if tloc < chunk_size:
+                    ploc = chunk * chunk_size + tloc
+                    buff[tloc, 0] = x2[ploc, 0]
+                    buff[tloc, 1] = y2[ploc, 1]
+                    buff[tloc, 2] = z2[ploc, 2]
+                    buff[tloc, 3] = w2[ploc, 3]
+            cuda.syncthreads()
+
+            for q in range(chunk_size):
+                qx, qy, qz, qw = buff[q]
+
+                dx = px-qx
+                dy = py-qy
+                dz = pz-qz
+                wprod = pw*qw
+                dsq = dx*dx + dy*dy + dz*dz
+
+                k = nbins-1
+                while dsq <= rbins_squared[k]:
+                    cuda.atomic.add(result, k-1, wprod)
+                    k = k-1
+                    if k <= 0:
+                        break
+
+        last_chunk = n2 - (n_chunks-1) * chunk_size
+        for load in range(n_loads):
+            tloc = n_loads * cuda.threadIdx.x + load
+            if tloc < last_chunk:
+                ploc = chunk * chunk_size + tloc
+                buff[tloc, 0] = x2[ploc, 0]
+                buff[tloc, 1] = y2[ploc, 1]
+                buff[tloc, 2] = z2[ploc, 2]
+                buff[tloc, 3] = w2[ploc, 3]
+        cuda.syncthreads()
+
+        for q in range(last_chunk):
+            qx, qy, qz, qw = buff[q]
 
             dx = px-qx
             dy = py-qy
