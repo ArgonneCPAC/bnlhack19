@@ -140,7 +140,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
             new_rbins = np.concatenate(
                 [np.array([DEFAULT_RBINS_SQUARED[0]/2]),
                  DEFAULT_RBINS_SQUARED,
-                 np.array([DEFAULT_RBINS_SQUARED[-1]/2])]).astype(np.float32)
+                 np.array([DEFAULT_RBINS_SQUARED[-1]*2])]).astype(np.float32)
             new_result = np.zeros(result.shape[0]+2)
             func[blocks, threads](
                 _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
@@ -346,7 +346,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
         runtime = (end-start)/3
 
         results_host /= 3
-    elif 'cuda_transpose' in func_str:
+    elif 'cuda_extrabins' in func_str:
         d_x1 = cuda.to_device(x1.astype(np.float32))
         d_y1 = cuda.to_device(y1.astype(np.float32))
         d_z1 = cuda.to_device(z1.astype(np.float32))
@@ -360,7 +360,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
         new_rbins = np.concatenate(
             [np.array([DEFAULT_RBINS_SQUARED[0]/2]),
              DEFAULT_RBINS_SQUARED,
-             np.array([DEFAULT_RBINS_SQUARED[-1]/2])]).astype(np.float32)
+             np.array([DEFAULT_RBINS_SQUARED[-1]*2])]).astype(np.float32)
         new_result = np.zeros(result.shape[0]+2)
 
         d_rbins_squared = cuda.to_device(
