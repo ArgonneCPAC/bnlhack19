@@ -599,7 +599,7 @@ def count_weighted_pairs_3d_cuda2d_smem(
     local_buffer1 = cuda.shared.array((chunk_size, 4), numba.float32)
     local_buffer2 = cuda.shared.array((chunk_size, 4), numba.float32)
 
-    tloc = cuda.threadIdx.x * cuda.blockDim.y + cuda.threadIdx.y
+    tloc = cuda.threadIdx.y * cuda.blockDim.x + cuda.threadIdx.x
     if tloc < chunk_size:
         ploc = loc_1 + tloc
         local_buffer1[tloc, 0] = x1[ploc]
