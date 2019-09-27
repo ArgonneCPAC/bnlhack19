@@ -524,7 +524,7 @@ def count_weighted_pairs_3d_cuda_extrabins(
     nbins_minus1 = rbins_squared.shape[0] - 1
 
     dlogr = math.log(rbins_squared[2]/rbins_squared[1])/2
-    minlogr = math.log(rbins_squared[1])
+    minlogr = math.log(rbins_squared[1])/2
 
     for i in range(start, n1, stride):
         px = x1[i]
