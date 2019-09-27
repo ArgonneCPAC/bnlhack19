@@ -378,7 +378,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
         runtime = (end-start)/3
 
         results_host /= 3
-        results_host = results_host[1:-1]
+        results_host = np.cumsum(results_host[1:-1])
 
     elif 'cuda' in func_str:
         d_x1 = cuda.to_device(x1.astype(np.float32))
