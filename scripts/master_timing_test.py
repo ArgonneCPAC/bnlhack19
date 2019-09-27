@@ -138,9 +138,9 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
                 ptswts1, ptswts2, DEFAULT_RBINS_SQUARED, result)
         elif 'cuda_extrabins' in func_str:
             new_rbins = np.concatenate(
-                [np.array(DEFAULT_RBINS_SQUARED[0]/2),
+                [np.array([DEFAULT_RBINS_SQUARED[0]/2]),
                  DEFAULT_RBINS_SQUARED,
-                 np.array(DEFAULT_RBINS_SQUARED[-1]/2)]).astype(np.float32)
+                 np.array([DEFAULT_RBINS_SQUARED[-1]/2])]).astype(np.float32)
             new_result = np.zeros(result.shape[0]+2)
             func[blocks, threads](
                 _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
@@ -358,9 +358,9 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
         d_w2 = cuda.to_device(w2.astype(np.float32))
 
         new_rbins = np.concatenate(
-            [np.array(DEFAULT_RBINS_SQUARED[0]/2),
+            [np.array([DEFAULT_RBINS_SQUARED[0]/2]),
              DEFAULT_RBINS_SQUARED,
-             np.array(DEFAULT_RBINS_SQUARED[-1]/2)]).astype(np.float32)
+             np.array([DEFAULT_RBINS_SQUARED[-1]/2])]).astype(np.float32)
         new_result = np.zeros(result.shape[0]+2)
 
         d_rbins_squared = cuda.to_device(
