@@ -16,7 +16,7 @@ __all__ = (  # noqa
     'count_weighted_pairs_3d_cuda_transpose2d',
     'count_weighted_pairs_3d_cuda_smem',
     'count_weighted_pairs_3d_cuda_extrabins',
-    'count_weighted_pairs_3d_cuda2_smem')
+    'count_weighted_pairs_3d_cuda2d_smem')
 
 
 # @cuda.jit(fastmath=True)
@@ -586,7 +586,7 @@ def count_weighted_pairs_3d_cuda_noncuml(
 
 
 @cuda.jit(fastmath=True, max_registers=32)
-def count_weighted_pairs_3d_cuda2_smem(
+def count_weighted_pairs_3d_cuda2d_smem(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
     n1 = x1.shape[0] // cuda.gridDim.x
     n2 = x2.shape[0] // cuda.gridDim.y
@@ -595,23 +595,25 @@ def count_weighted_pairs_3d_cuda2_smem(
     loc_1 = cuda.blockIdx.x * n1
     loc_2 = cuda.blockIdx.y * n2
 
-    chunk_size = 16*16
+    chunk_size = 16
     local_buffer1 = cuda.shared.array((chunk_size, 4), numba.float32)
     local_buffer2 = cuda.shared.array((chunk_size, 4), numba.float32)
 
     tloc = cuda.threadIdx.x * cuda.blockDim.y + cuda.threadIdx.y
+    if tloc < chunk_size:
+        ploc = loc_1 + tloc
+        local_buffer1[tloc, 0] = x1[ploc]
+        local_buffer1[tloc, 1] = y1[ploc]
+        local_buffer1[tloc, 2] = z1[ploc]
+        local_buffer1[tloc, 3] = w1[ploc]
 
-    ploc = loc_1 + tloc
-    local_buffer1[tloc, 0] = x1[ploc]
-    local_buffer1[tloc, 1] = y1[ploc]
-    local_buffer1[tloc, 2] = z1[ploc]
-    local_buffer1[tloc, 3] = w1[ploc]
-
-    ploc = loc_2 + tloc
-    local_buffer2[tloc, 0] = x2[ploc]
-    local_buffer2[tloc, 1] = z2[ploc]
-    local_buffer2[tloc, 2] = y2[ploc]
-    local_buffer2[tloc, 3] = w2[ploc]
+    if tloc >= chunk_size and tloc < chunk_size * 2:
+        _tloc = tloc - chunk_size
+        ploc = loc_2 + _tloc
+        local_buffer2[_tloc, 0] = x2[ploc]
+        local_buffer2[_tloc, 1] = z2[ploc]
+        local_buffer2[_tloc, 2] = y2[ploc]
+        local_buffer2[_tloc, 3] = w2[ploc]
 
     cuda.syncthreads()
 
