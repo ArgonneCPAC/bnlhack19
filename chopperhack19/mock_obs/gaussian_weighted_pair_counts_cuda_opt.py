@@ -487,7 +487,7 @@ def count_weighted_pairs_3d_cuda_smem(
         for load in range(n_loads):
             tloc = load * cuda.blockDim.x + cuda.threadIdx.x
             if tloc < last_chunk:
-                ploc = chunk * chunk_size + tloc
+                ploc = (n_chunks-1) * chunk_size + tloc
                 buff[tloc, 0] = x2[ploc]
                 buff[tloc, 1] = y2[ploc]
                 buff[tloc, 2] = z2[ploc]
