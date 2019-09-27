@@ -137,6 +137,7 @@ def _main(func, blocks, threads, npoints, nmesh1, nmesh2, skip_numba_comp):
             func[blocks, threads](
                 ptswts1, ptswts2, DEFAULT_RBINS_SQUARED, result)
         elif 'cuda' in func_str:
+            print('called')
             func[blocks, threads](
                 _x1, _y1, _z1, _w1, _x2, _y2, _z2, _w2,
                 DEFAULT_RBINS_SQUARED, result)
