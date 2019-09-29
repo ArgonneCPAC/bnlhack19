@@ -13,6 +13,7 @@ from chopperhack19.mock_obs.double_chop_kernel import double_chop_pairs_cuda
 ########################################################################
 # This demo shows how to compile a CUDA .cu file, load a particular CUDA
 # kernel, launch it with CuPy arrays. Also shows how to make CuPy and 
+# Numba work together
 ########################################################################
 
 
