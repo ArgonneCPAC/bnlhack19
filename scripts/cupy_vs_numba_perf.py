@@ -101,4 +101,4 @@ d_result_nb = d_result.copy_to_host()
 assert cp.allclose(d_result_cp, d_result_nb, rtol=5E-4)
 
 
-print(sum_arrays_nb.inspect_types())
+# print(sum_arrays_nb.inspect_types())
