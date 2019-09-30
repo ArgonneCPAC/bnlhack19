@@ -41,6 +41,8 @@ blocks = 512
 threads = 512
 if len(sys.argv) > 1:
     npoints = int(sys.argv[1])
+else:
+    npoints = 100_000
 
 Lbox = 1000.
 
