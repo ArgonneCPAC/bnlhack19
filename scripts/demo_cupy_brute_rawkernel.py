@@ -98,7 +98,7 @@ for i in range(4):
 _end = time.time()
 
 print('launching CUDA kernel from CuPy took', timing_cp/3, 'ms in average')
-print('wall time:', (_end - _start)/3)
+# print('wall time:', (_end - _start)/3)
 d_result_cp = d_result.copy()
 
 # for GPU timing using Numba
@@ -143,7 +143,7 @@ d_result_nb = d_result_nb.copy_to_host()
 _end = time.time()
 
 print('launching Numba jit kernel took', timing_nb/3, 'ms in average')
-print('wall time:', (_end - _start)/3)
+# print('wall time:', (_end - _start)/3)
 
 # check that the CUDA kernel agrees with the Numba kernel
 assert cp.allclose(d_result_cp, d_result_nb, rtol=5E-4)
