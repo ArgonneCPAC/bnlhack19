@@ -80,7 +80,7 @@ for i in range(4):
     if i > 0:  # warm-up not needed if using RawModule
         start.record()
     if i == 1:
-        start = time.time()
+        _start = time.time()
     brute_force_pairs_kernel(
         (blocks,), (threads,),
         (d_x1, d_y1, d_z1, d_w1,
@@ -95,10 +95,10 @@ for i in range(4):
         end.synchronize()
         timing_cp += cp.cuda.get_elapsed_time(start, end)
 
-end = time.time()
+_end = time.time()
 
 print('launching CUDA kernel from CuPy took', timing_cp/3, 'ms in average')
-print('wall time:', (end - start)/3)
+print('wall time:', (_end - _start)/3)
 d_result_cp = d_result.copy()
 
 # for GPU timing using Numba
@@ -129,7 +129,7 @@ for i in range(4):
     if i > 0:
         start.record()
     if i == 1:
-        start = time.time()
+        _start = time.time()
     count_weighted_pairs_3d_cuda[blocks, threads](
         d_x1, d_y1, d_z1, d_w1,
         d_x2, d_y2, d_z2, d_w2,
@@ -139,12 +139,11 @@ for i in range(4):
         end.synchronize()
         timing_nb += cuda.event_elapsed_time(start, end)
 
-end = time.time()
-
 d_result_nb = d_result_nb.copy_to_host()
+_end = time.time()
 
 print('launching Numba jit kernel took', timing_nb/3, 'ms in average')
-print('wall time:', (end - start)/3)
+print('wall time:', (_end - _start)/3)
 
 # check that the CUDA kernel agrees with the Numba kernel
 assert cp.allclose(d_result_cp, d_result_nb, rtol=5E-4)
