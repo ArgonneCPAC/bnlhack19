@@ -1,5 +1,4 @@
 import os
-import time
 import sys
 
 import cupy as cp
@@ -49,7 +48,7 @@ Lbox = 1000.
 # array init
 # CuPy functionalities should be used to avoid unnecessary computation
 # and transfer, which I didn't do here as it's midnight...
-result = np.zeros_like(DEFAULT_RBINS_SQUARED)[:-1].astype(cp.float32)
+result = np.zeros_like(DEFAULT_RBINS_SQUARED)[:-1].astype(np.float32)
 
 n1 = npoints
 n2 = npoints
@@ -79,8 +78,6 @@ timing_cp = 0
 for i in range(4):
     if i > 0:  # warm-up not needed if using RawModule
         start.record()
-    if i == 1:
-        _start = time.time()
     brute_force_pairs_kernel(
         (blocks,), (threads,),
         (d_x1, d_y1, d_z1, d_w1,
@@ -95,10 +92,7 @@ for i in range(4):
         end.synchronize()
         timing_cp += cp.cuda.get_elapsed_time(start, end)
 
-_end = time.time()
-
 print('launching CUDA kernel from CuPy took', timing_cp/3, 'ms in average')
-# print('wall time:', (_end - _start)/3)
 d_result_cp = d_result.copy()
 
 # for GPU timing using Numba
@@ -128,8 +122,6 @@ d_result_nb = cuda.device_array_like(result.astype(np.float32))
 for i in range(4):
     if i > 0:
         start.record()
-    if i == 1:
-        _start = time.time()
     count_weighted_pairs_3d_cuda[blocks, threads](
         d_x1, d_y1, d_z1, d_w1,
         d_x2, d_y2, d_z2, d_w2,
@@ -139,14 +131,10 @@ for i in range(4):
         end.synchronize()
         timing_nb += cuda.event_elapsed_time(start, end)
 
-d_result_nb = d_result_nb.copy_to_host()
-_end = time.time()
-
 print('launching Numba jit kernel took', timing_nb/3, 'ms in average')
-# print('wall time:', (_end - _start)/3)
 
 # check that the CUDA kernel agrees with the Numba kernel
 assert cp.allclose(d_result_cp, d_result_nb, rtol=5E-4)
 
 
-print(count_weighted_pairs_3d_cuda.inspect_types())
+# print(count_weighted_pairs_3d_cuda.inspect_types())
