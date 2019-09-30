@@ -118,7 +118,7 @@ d_w2 = cuda.to_device(w2.astype(np.float32))
 
 d_rbins_squared = cuda.to_device(
     DEFAULT_RBINS_SQUARED.astype(np.float32))
-d_result = cuda.device_array_like(result.astype(np.float32))
+d_result_nb = cuda.device_array_like(result.astype(np.float32))
 
 
 # running the Numba jit kernel
