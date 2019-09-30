@@ -147,3 +147,6 @@ print('launching Numba jit kernel took', timing_nb/3, 'ms in average')
 
 # check that the CUDA kernel agrees with the Numba kernel
 assert cp.allclose(d_result_cp, d_result_nb, rtol=5E-4)
+
+
+print(count_weighted_pairs_3d_cuda.inspect_types())
