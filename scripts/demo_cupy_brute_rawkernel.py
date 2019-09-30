@@ -1,4 +1,6 @@
 import os
+import time
+import sys
 
 import cupy as cp
 import numpy as np
@@ -37,7 +39,8 @@ brute_force_pairs_kernel = cp.RawKernel(
 # parameters
 blocks = 512
 threads = 512
-npoints = 1000
+if len(sys.argv) > 1:
+    npoints = int(sys.argv[1])
 
 Lbox = 1000.
 
@@ -74,6 +77,8 @@ timing_cp = 0
 for i in range(4):
     if i > 0:  # warm-up not needed if using RawModule
         start.record()
+    if i == 1:
+        start = time.time()
     brute_force_pairs_kernel(
         (blocks,), (threads,),
         (d_x1, d_y1, d_z1, d_w1,
@@ -88,7 +93,10 @@ for i in range(4):
         end.synchronize()
         timing_cp += cp.cuda.get_elapsed_time(start, end)
 
+end = time.time()
+
 print('launching CUDA kernel from CuPy took', timing_cp/3, 'ms in average')
+print('wall time:', (end - start)/3)
 d_result_cp = d_result.copy()
 
 # for GPU timing using Numba
@@ -96,18 +104,30 @@ start = cuda.event()
 end = cuda.event()
 timing_nb = 0
 
+d_x1 = cuda.to_device(x1.astype(np.float32))
+d_y1 = cuda.to_device(y1.astype(np.float32))
+d_z1 = cuda.to_device(z1.astype(np.float32))
+d_w1 = cuda.to_device(w1.astype(np.float32))
+
+d_x2 = cuda.to_device(x2.astype(np.float32))
+d_y2 = cuda.to_device(y2.astype(np.float32))
+d_z2 = cuda.to_device(z2.astype(np.float32))
+d_w2 = cuda.to_device(w2.astype(np.float32))
+
+d_rbins_squared = cuda.to_device(
+    DEFAULT_RBINS_SQUARED.astype(np.float32))
+d_result = cuda.device_array_like(result.astype(np.float32))
+
+
 # running the Numba jit kernel
 # this works because CuPy arrays have the __cuda_array_interface__ attribute,
 # which is accepted by Numba kernels, so you don't have to create the arrays
 # again using Numba's API
-count_weighted_pairs_3d_cuda[blocks, threads](
-    d_x1, d_y1, d_z1, d_w1,
-    d_x2, d_y2, d_z2, d_w2,
-    d_rbins_squared, d_result_nb)
-
 for i in range(4):
     if i > 0:
         start.record()
+    if i == 1:
+        start = time.time()
     count_weighted_pairs_3d_cuda[blocks, threads](
         d_x1, d_y1, d_z1, d_w1,
         d_x2, d_y2, d_z2, d_w2,
@@ -116,8 +136,13 @@ for i in range(4):
         end.record()
         end.synchronize()
         timing_nb += cuda.event_elapsed_time(start, end)
+
+end = time.time()
+
+d_result_nb = d_result_nb.copy_to_host()
+
 print('launching Numba jit kernel took', timing_nb/3, 'ms in average')
-d_result_nb = d_result_nb.copy()
+print('wall time:', (end - start)/3)
 
 # check that the CUDA kernel agrees with the Numba kernel
 assert cp.allclose(d_result_cp, d_result_nb, rtol=5E-4)
