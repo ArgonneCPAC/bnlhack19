@@ -197,4 +197,4 @@ print('launching Numba jit kernel took', timing_nb/3, 'ms in average')
 assert cp.allclose(d_result_cp, d_result_nb, rtol=5E-4)
 
 
-# print(count_weighted_pairs_3d_cuda.inspect_types())
+print(count_weighted_pairs_3d_cuda.inspect_types())
