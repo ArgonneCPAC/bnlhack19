@@ -71,8 +71,8 @@ n2 = npoints
 DEFAULT_RBINS_SQUARED = (np.logspace(
     np.log10(0.1/1e3), np.log10(40/1e3), 20)**2).astype(np.float32)
 rng = np.random.RandomState(seed=42)
-x1, y1, z1, w1 = rng.uniform(size=(n1, 4)).astype(np.float32)
-x2, y2, z2, w2 = rng.uniform(size=(n1, 4)).astype(np.float32)
+x1, y1, z1, w1 = rng.uniform(size=(4, n1)).astype(np.float32)
+x2, y2, z2, w2 = rng.uniform(size=(4, n1)).astype(np.float32)
 
 # array init
 # CuPy functionalities should be used to avoid unnecessary computation
