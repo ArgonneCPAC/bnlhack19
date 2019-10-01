@@ -3,7 +3,6 @@ import sys
 import cupy as cp
 import numpy as np
 from numba import cuda
-import numba
 
 from chopperhack19.mock_obs.tests import random_weighted_points
 from chopperhack19.mock_obs.tests.generate_test_data import (
@@ -45,7 +44,7 @@ __global__ void brute_force_pairs_kernel(
             float wprod = pw * qw;
             float dsq = dx * dx + dy * dy + dz * dz;
 
-            size_t k = nbins - 1;
+            int k = nbins - 1;
             while (dsq <= rbins_squared[k]) {
                 atomicAdd(&(result[k-1]), wprod);
                 k -= 1;
@@ -149,10 +148,10 @@ def count_weighted_pairs_3d_cuda(
             wprod = pw*qw
             dsq = dx*dx + dy*dy + dz*dz
 
-            k = numba.int32(nbins-numba.int32(1))
+            k = nbins - 1
             while dsq <= rbins_squared[k]:
-                cuda.atomic.add(result, numba.int32(k)-numba.int32(1), wprod)
-                k = numba.int32(k-numba.int32(1))
+                cuda.atomic.add(result, k-1, wprod)
+                k -= 1
                 if k <= 0:
                     break
 
