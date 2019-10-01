@@ -109,7 +109,7 @@ for i in range(4):
          d_x2, d_y2, d_z2, d_w2,
          d_rbins_squared, d_result_cp,
          cp.int32(d_x1.shape[0]),
-         cp.int32(d_x1.shape[0]),
+         cp.int32(d_x2.shape[0]),
          cp.int32(d_rbins_squared.shape[0]))
     )
     if i > 0:  # warm-up not needed if using RawModule
