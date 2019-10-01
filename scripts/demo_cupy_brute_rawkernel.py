@@ -119,7 +119,7 @@ for i in range(4):
         timing_cp_wall += (_e - _s)
 
 print('cupy+CUDA events:', timing_cp/3, 'ms')
-print('cupy+CUDA wall  :', timing_cp_wall/3, 'ms')
+print('cupy+CUDA wall  :', timing_cp_wall/3*1000, 'ms')
 d_result_cp = d_result_cp.copy()
 
 
@@ -161,6 +161,7 @@ def count_weighted_pairs_3d_cuda(
 start = cuda.event()
 end = cuda.event()
 timing_nb = 0
+timing_nb_wall = 0
 
 d_x1 = cuda.to_device(x1.astype(np.float32))
 d_y1 = cuda.to_device(y1.astype(np.float32))
@@ -184,6 +185,7 @@ d_result_nb = cuda.device_array_like(result.astype(np.float32))
 for i in range(4):
     if i > 0:
         start.record()
+        _s = time.time()
     count_weighted_pairs_3d_cuda[blocks, threads](
         d_x1, d_y1, d_z1, d_w1,
         d_x2, d_y2, d_z2, d_w2,
@@ -191,9 +193,12 @@ for i in range(4):
     if i > 0:
         end.record()
         end.synchronize()
+        _e = time.time()
         timing_nb += cuda.event_elapsed_time(start, end)
+        timing_nb_wall += (_e - _s)
 
-print('launching Numba jit kernel took', timing_nb/3, 'ms on average')
+print('numba events:', timing_nb/3, 'ms')
+print('numba wall  :', timing_nb_wall/3*1000, 'ms')
 
 # print(count_weighted_pairs_3d_cuda.inspect_types())
 
