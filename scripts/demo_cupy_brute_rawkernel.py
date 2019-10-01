@@ -179,9 +179,6 @@ if kind in ['both', 'numba']:
     d_result_nb = cuda.device_array_like(result.astype(np.float32))
 
     # running the Numba jit kernel
-    # this works because CuPy arrays have the __cuda_array_interface__ attribute,
-    # which is accepted by Numba kernels, so you don't have to create the arrays
-    # again using Numba's API
     for i in range(4):
         if i > 0:
             start.record()
