@@ -4,10 +4,6 @@ import cupy as cp
 import numpy as np
 from numba import cuda
 
-from chopperhack19.mock_obs.tests import random_weighted_points
-from chopperhack19.mock_obs.tests.generate_test_data import (
-    DEFAULT_RBINS_SQUARED)
-
 ########################################################################
 # This demo shows how to compile a CUDA .cu file, load a particular CUDA
 # kernel, launch it with CuPy arrays. Also shows how to make CuPy and
@@ -68,18 +64,21 @@ if len(sys.argv) > 1:
     npoints = int(sys.argv[1])
 else:
     npoints = 100_000
+n1 = npoints
+n2 = npoints
 
-Lbox = 1000.
+# make the data
+DEFAULT_RBINS_SQUARED = (np.logspace(
+    np.log10(0.1/1e3), np.log10(40/1e3), 20)**2).astype(np.float32)
+rng = np.random.RandomState(seed=42)
+x1, y1, z1, w1 = rng.uniform(size=(n1, 4)).astype(np.float32)
+x2, y2, z2, w2 = rng.uniform(size=(n1, 4)).astype(np.float32)
 
 # array init
 # CuPy functionalities should be used to avoid unnecessary computation
 # and transfer, which I didn't do here as it's midnight...
-result = np.zeros_like(DEFAULT_RBINS_SQUARED)[:-1].astype(np.float32)
 
-n1 = npoints
-n2 = npoints
-x1, y1, z1, w1 = random_weighted_points(n1, Lbox, 0)
-x2, y2, z2, w2 = random_weighted_points(n2, Lbox, 1)
+result = np.zeros_like(DEFAULT_RBINS_SQUARED)[:-1].astype(np.float32)
 
 d_x1 = cp.asarray(x1, dtype=cp.float32)
 d_y1 = cp.asarray(y1, dtype=cp.float32)
@@ -117,7 +116,7 @@ for i in range(4):
         end.synchronize()
         timing_cp += cp.cuda.get_elapsed_time(start, end)
 
-print('launching CUDA kernel from CuPy took', timing_cp/3, 'ms in average')
+print('launching CUDA kernel from CuPy took', timing_cp/3, 'ms on average')
 d_result_cp = d_result_cp.copy()
 
 
@@ -191,7 +190,7 @@ for i in range(4):
         end.synchronize()
         timing_nb += cuda.event_elapsed_time(start, end)
 
-print('launching Numba jit kernel took', timing_nb/3, 'ms in average')
+print('launching Numba jit kernel took', timing_nb/3, 'ms on average')
 
 # print(count_weighted_pairs_3d_cuda.inspect_types())
 
