@@ -66,8 +66,7 @@ d_z2 = cp.asarray(z2, dtype=cp.float32)
 d_w2 = cp.asarray(w2, dtype=cp.float32)
 
 d_rbins_squared = cp.asarray(DEFAULT_RBINS_SQUARED, dtype=cp.float32)
-d_result = cp.asarray(result, dtype=cp.float32)
-d_result_nb = cp.asarray(result, dtype=cp.float32)
+d_result_cp = cp.asarray(result, dtype=cp.float32)
 
 # for GPU timing using CuPy
 start = cp.cuda.Event()
@@ -82,7 +81,7 @@ for i in range(4):
         (blocks,), (threads,),
         (d_x1, d_y1, d_z1, d_w1,
          d_x2, d_y2, d_z2, d_w2,
-         d_rbins_squared, d_result,
+         d_rbins_squared, d_result_cp,
          cp.int32(d_x1.shape[0]),
          cp.int32(d_x1.shape[0]),
          cp.int32(d_rbins_squared.shape[0]))
@@ -93,7 +92,7 @@ for i in range(4):
         timing_cp += cp.cuda.get_elapsed_time(start, end)
 
 print('launching CUDA kernel from CuPy took', timing_cp/3, 'ms in average')
-d_result_cp = d_result.copy()
+d_result_cp = d_result_cp.copy()
 
 # for GPU timing using Numba
 start = cuda.event()
