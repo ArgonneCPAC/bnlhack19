@@ -3,6 +3,7 @@ import sys
 import cupy as cp
 import numpy as np
 from numba import cuda
+import numba
 
 from chopperhack19.mock_obs.tests import random_weighted_points
 from chopperhack19.mock_obs.tests.generate_test_data import (
@@ -148,7 +149,7 @@ def count_weighted_pairs_3d_cuda(
             wprod = pw*qw
             dsq = dx*dx + dy*dy + dz*dz
 
-            k = nbins-1
+            k = numba.int32(nbins-1)
             while dsq <= rbins_squared[k]:
                 cuda.atomic.add(result, k-1, wprod)
                 k -= 1
