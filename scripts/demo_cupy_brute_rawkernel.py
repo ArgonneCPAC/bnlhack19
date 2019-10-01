@@ -1,4 +1,5 @@
 import sys
+import time
 
 import cupy as cp
 import numpy as np
@@ -75,9 +76,6 @@ x1, y1, z1, w1 = rng.uniform(size=(4, n1)).astype(np.float32)
 x2, y2, z2, w2 = rng.uniform(size=(4, n1)).astype(np.float32)
 
 # array init
-# CuPy functionalities should be used to avoid unnecessary computation
-# and transfer, which I didn't do here as it's midnight...
-
 result = np.zeros_like(DEFAULT_RBINS_SQUARED)[:-1].astype(np.float32)
 
 d_x1 = cp.asarray(x1, dtype=cp.float32)
@@ -97,11 +95,13 @@ d_result_cp = cp.asarray(result, dtype=cp.float32)
 start = cp.cuda.Event()
 end = cp.cuda.Event()
 timing_cp = 0
+timing_cp_wall = 0
 
 # running the kernel using CuPy's functionality
 for i in range(4):
     if i > 0:  # warm-up not needed if using RawModule
         start.record()
+        _s = time.time()
     brute_force_pairs_kernel(
         (blocks,), (threads,),
         (d_x1, d_y1, d_z1, d_w1,
@@ -114,9 +114,12 @@ for i in range(4):
     if i > 0:  # warm-up not needed if using RawModule
         end.record()
         end.synchronize()
+        _e = time.time()
         timing_cp += cp.cuda.get_elapsed_time(start, end)
+        timing_cp_wall += (_e - _s)
 
-print('launching CUDA kernel from CuPy took', timing_cp/3, 'ms on average')
+print('cupy+CUDA events:', timing_cp/3, 'ms')
+print('cupy+CUDA wall  :', timing_cp_wall/3, 'ms')
 d_result_cp = d_result_cp.copy()
 
 
