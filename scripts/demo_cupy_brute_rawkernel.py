@@ -151,7 +151,7 @@ def count_weighted_pairs_3d_cuda(
             k = nbins-1
             while dsq <= rbins_squared[k]:
                 cuda.atomic.add(result, k-1, wprod)
-                k = k-1
+                k -= 1
                 if k <= 0:
                     break
 
