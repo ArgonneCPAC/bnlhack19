@@ -118,7 +118,7 @@ d_result_cp = d_result_cp.copy()
 
 
 # for GPU timing using Numba
-@cuda.jit(fastmath=True)
+@cuda.jit(fastmath=True, max_registers=32)
 def count_weighted_pairs_3d_cuda(
         x1, y1, z1, w1, x2, y2, z2, w2, rbins_squared, result):
     start = cuda.grid(1)
