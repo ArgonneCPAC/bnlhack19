@@ -149,10 +149,10 @@ def count_weighted_pairs_3d_cuda(
             wprod = pw*qw
             dsq = dx*dx + dy*dy + dz*dz
 
-            k = numba.int32(nbins-1)
+            k = numba.int32(nbins-numba.int32(1))
             while dsq <= rbins_squared[k]:
-                cuda.atomic.add(result, numba.int32(k)-1, wprod)
-                k = numba.int32(k+1)
+                cuda.atomic.add(result, numba.int32(k)-numba.int32(1), wprod)
+                k = numba.int32(k+numba.int32(1))
                 if k <= 0:
                     break
 
