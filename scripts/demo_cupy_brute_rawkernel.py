@@ -5,12 +5,6 @@ import cupy as cp
 import numpy as np
 from numba import cuda
 
-########################################################################
-# This demo shows how to compile a CUDA .cu file, load a particular CUDA
-# kernel, launch it with CuPy arrays. Also shows how to make CuPy and
-# Numba work together
-########################################################################
-
 source_code = """\
 extern "C"{
 
