@@ -194,6 +194,8 @@ if kind in ['both', 'numba']:
 
     # print(count_weighted_pairs_3d_cuda.inspect_types())
 
-if kind in ['both']:
+    print("numba ptx:", count_weighted_pairs_3d_cuda.ptx)
+
+if kind in ['both'] and npoints <= 10:
     # check that the CUDA kernel agrees with the Numba kernel
     assert cp.allclose(d_result_cp, d_result_nb, rtol=5E-4)
