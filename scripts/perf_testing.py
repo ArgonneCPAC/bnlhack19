@@ -49,21 +49,21 @@ if kind in ['both', 'cupy']:
             float px = x1[i];
             //float py = y1[i];
             //float pz = z1[i];
-            //float pw = w1[i];
+            float pw = w1[i];
 
             for (size_t j = 0; j < n2; j++) {
                 float qx = x2[j];
                 //float qy = y2[j];
                 //float qz = z2[j];
-                //float qw = w2[j];
+                float qw = w2[j];
 
                 //float dx = px - qx;
                 //float dy = py - qy;
                 //float dz = pz - qz;
-                //float wprod = pw * qw;
+                float wprod = pw * qw;
                 //float dsq = dx * dx + dy * dy + dz * dz;
 
-                g += (px * qx);
+                g += (px * qx * wprod);
             }
         }
 
@@ -138,19 +138,19 @@ if kind in ['both', 'numba']:
             px = x1[i]
             # py = y1[i]
             # pz = z1[i]
-            # pw = w1[i]
+            pw = w1[i]
             for j in range(n2):
                 qx = x2[j]
                 # qy = y2[j]
                 # qz = z2[j]
-                # qw = w2[j]
+                qw = w2[j]
                 # dx = px-qx
                 # dy = py-qy
                 # dz = pz-qz
-                # wprod = pw*qw
+                wprod = pw*qw
                 # dsq = dx*dx + dy*dy + dz*dz
 
-                g += (px * qx)
+                g += (px * qx * wprod)
 
         result[0] = g
 
