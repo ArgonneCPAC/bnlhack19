@@ -63,7 +63,7 @@ if kind in ['both', 'cupy']:
                 float wprod = pw * qw;
                 float dsq = dx * dx + dy * dy + dz * dz;
 
-                g += dsq;
+                g += (dsq * wprod);
             }
         }
 
@@ -132,7 +132,6 @@ if kind in ['both', 'numba']:
 
         n1 = x1.shape[0]
         n2 = x2.shape[0]
-        nbins = rbins_squared.shape[0]
         g = 0
 
         for i in range(start, n1, stride):
@@ -151,7 +150,7 @@ if kind in ['both', 'numba']:
                 wprod = pw*qw
                 dsq = dx*dx + dy*dy + dz*dz
 
-                g += dsq
+                g += (dsq * wprod)
 
         result[0] = g
 
