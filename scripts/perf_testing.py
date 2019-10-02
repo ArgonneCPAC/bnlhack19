@@ -73,6 +73,11 @@ if kind in ['both', 'cupy']:
     }
     """
 
+    # get the PTX
+    from cupy.cuda.compiler import compile_using_nvrtc
+    with open('cupy_ptx.txt', 'w') as fp:
+        fp.write(compile_using_nvrtc(source_code))
+
     # compile and load CUDA kernel using CuPy
     brute_force_pairs_kernel = cp.RawKernel(
         source_code, 'brute_force_pairs_kernel')
@@ -194,7 +199,9 @@ if kind in ['both', 'numba']:
 
     # print(count_weighted_pairs_3d_cuda.inspect_types())
 
-    print("numba ptx:", count_weighted_pairs_3d_cuda.ptx)
+    with open('numba_ptx.txt', 'w') as fp:
+        fp.write(
+            list(count_weighted_pairs_3d_cuda.definitions.values())[0].ptx)
 
 if kind in ['both'] and npoints <= 10:
     # check that the CUDA kernel agrees with the Numba kernel
